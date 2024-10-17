@@ -31,3 +31,13 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/auth/', include('apps.authentication.urls')),
+    path('api/stock/', include('apps.stock_analysis.urls')),
+    path('api/predictions/', include('apps.predictions.urls')),
+    # Add other app URLs as needed
+]
