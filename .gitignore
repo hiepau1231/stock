@@ -1,2 +1,23 @@
 .aider*
 .env
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Environment variables
+.env
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Static files
+/staticfiles
+/static
+
+# Node.js
+node_modules/

@@ -1,0 +1,6 @@
+Django>=5.1
+djangorestframework
+channels
+channels_redis
+psycopg2
+python-decouple
