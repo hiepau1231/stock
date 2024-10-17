@@ -35,3 +35,8 @@ async def update_stock_prices():
                 }
             )
         await asyncio.sleep(60)  # Update every 60 seconds
+# Existing utils...
+import asyncio
+
+async def start_background_tasks():
+    asyncio.create_task(update_stock_prices())
