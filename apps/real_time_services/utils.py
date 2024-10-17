@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from .consumers import StockDataConsumer
 from channels.layers import get_channel_layer
 import asyncio
+from apps.stock_analysis.models import Stock
 
 async def fetch_stock_data(symbol):
     url = f'https://finance.example.com/stock/{symbol}'
