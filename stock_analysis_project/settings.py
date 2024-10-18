@@ -10,6 +10,8 @@ INSTALLED_APPS = [
 # At the end of the file
 ASGI_APPLICATION = 'stock_analysis_project.asgi.application'
 
+import os
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',

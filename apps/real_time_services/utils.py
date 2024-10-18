@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import asyncio
 from apps.stock_analysis.models import Stock
 from apps.stock_analysis.serializers import StockSerializer
 
