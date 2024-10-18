@@ -4,3 +4,5 @@ channels
 channels_redis
 psycopg2
 python-decouple
+channels==4.0.0
+channels-redis==4.0.0
