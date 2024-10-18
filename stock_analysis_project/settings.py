@@ -28,9 +28,11 @@ INSTALLED_APPS = [
     'apps.real_time_services',
     'apps.stock_analysis',
     'apps.mock_api',  # Newly added
+    'corsheaders',  # Added for CORS support
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Added for CORS support
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -39,6 +41,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True  # For development purposes only
 
 ROOT_URLCONF = 'stock_analysis_project.urls'
 

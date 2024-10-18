@@ -8,7 +8,7 @@ function App() {
 
     useEffect(() => {
         // Fetch mock data from the backend
-        fetch('/api/mock-api/mock-stock-data/')
+        fetch('/api/stock_analysis/mock_stock_data/')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
