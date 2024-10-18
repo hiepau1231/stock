@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-from .consumers import StockDataConsumer
 from channels.layers import get_channel_layer
-import asyncio
+from asgiref.sync import async_to_sync
 from apps.stock_analysis.models import Stock
+from apps.stock_analysis.serializers import StockSerializer
 
 async def fetch_stock_data(symbol):
     url = f'https://finance.example.com/stock/{symbol}'
@@ -20,24 +20,23 @@ async def update_stock_prices():
         for symbol in symbols:
             price = await fetch_stock_data(symbol)
             # Update database
-            # Assuming Stock model is imported and available
             stock = await Stock.objects.aget(symbol=symbol)
             stock.latest_price = price
             await stock.asave()
             # Send update via WebSocket
-            await channel_layer.group_send(
-                "stock_data",
-                {
-                    'type': 'send_stock_data',
-                    'data': {
-                        'symbol': symbol,
-                        'latest_price': price
-                    }
-                }
-            )
+            await dispatch_stock_update(stock)
         await asyncio.sleep(60)  # Update every 60 seconds
-# Existing utils...
-import asyncio
+
+def dispatch_stock_update(stock_instance):
+    channel_layer = get_channel_layer()
+    serializer = StockSerializer(stock_instance)
+    async_to_sync(channel_layer.group_send)(
+        "stock_data",
+        {
+            'type': 'send_stock_data',
+            'data': serializer.data,
+        }
+    )
 
 async def start_background_tasks():
     asyncio.create_task(update_stock_prices())
