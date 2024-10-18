@@ -8,4 +8,8 @@ class RealTimeServicesConfig(AppConfig):
 
     def ready(self):
         from .utils import start_background_tasks
-        asyncio.create_task(start_background_tasks())
+        threading.Thread(
+            target=asyncio.run,
+            args=(start_background_tasks(),),
+            daemon=True
+        ).start()
