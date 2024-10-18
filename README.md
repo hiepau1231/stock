@@ -115,3 +115,18 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 ## Contact
 
 For any inquiries or support, please contact [your-email@example.com](mailto:your-email@example.com).
+### Temporary Mock Data Usage
+
+For demonstration purposes, the application currently uses mock data instead of real API calls. This allows us to showcase the application's structure and functionality without relying on incomplete backend services.
+
+**Mock Data Endpoints:**
+- `/api/stock_analysis/mock_stock_data/`
+
+**Frontend Changes:**
+- API calls in the frontend have been updated to fetch data from the mock endpoints.
+
+**Backend Changes:**
+- New views and URL patterns have been added to serve mock data.
+
+**Future Steps:**
+- Once the backend is fully implemented, replace the mock data with actual API calls.
