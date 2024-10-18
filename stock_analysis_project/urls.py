@@ -9,4 +9,5 @@ urlpatterns = [
     path('api/real-time-services/', include('apps.real_time_services.urls')),
     path('api/stock-analysis/', include('apps.stock_analysis.urls')),
     path('api/mock-api/', include('apps.mock_api.urls')),  # Added mock_api URLs
+    path('api/stock_analysis/', include('apps.stock_analysis.urls')),  # Added stock_analysis URLs
 ]

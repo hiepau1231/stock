@@ -1,12 +1,12 @@
 from rest_framework import viewsets
 from .models import Stock
 from .serializers import StockSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 class StockViewSet(viewsets.ModelViewSet):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
