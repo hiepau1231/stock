@@ -1,33 +1,65 @@
 import React, { useEffect, useState } from 'react';
+import './styles.css';
 
-const App = () => {
-    const [stockData, setStockData] = useState([]);
+function App() {
+    const [stocks, setStocks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const ws = new WebSocket('ws://localhost:8000/ws/realtime/');
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            setStockData((prevData) => [...prevData, data]);
-        };
-
-        return () => {
-            ws.close();
-        };
+        // Fetch mock data from the backend
+        fetch('/api/mock-api/mock-stock-data/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                setStocks(data.stocks);
+                setLoading(false);
+            })
+            .catch(error => {
+                setError(error);
+                setLoading(false);
+            });
     }, []);
 
+    if (loading) {
+        return <div className="App">Loading...</div>;
+    }
+
+    if (error) {
+        return <div className="App">Error: {error.message}</div>;
+    }
+
     return (
-        <div>
-            <h1>Welcome to the Stock Analysis Platform</h1>
-            <ul>
-                {stockData.map((stock, index) => (
-                    <li key={index}>
-                        {stock.symbol} - {stock.latest_price}
-                    </li>
-                ))}
-            </ul>
+        <div className="App">
+            <h1>Mock Stock Data</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Latest Price</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {stocks.map(stock => (
+                        <tr key={stock.id}>
+                            <td>{stock.id}</td>
+                            <td>{stock.symbol}</td>
+                            <td>{stock.name}</td>
+                            <td>${stock.latest_price.toFixed(2)}</td>
+                            <td>{new Date(stock.last_updated).toLocaleString()}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
-};
+}
 
 export default App;
