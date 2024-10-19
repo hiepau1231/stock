@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.authentication',
     'apps.predictions',
+    'apps.home',  # Add the home app for Argon Dashboard
     'apps.real_time_services.apps.RealTimeServicesConfig',  # Use AppConfig
     'apps.stock_analysis',
     'apps.mock_api',
@@ -116,6 +117,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'apps/static/assets'),
+    BASE_DIR / "static",
 ]
 
 # Default primary key field type
