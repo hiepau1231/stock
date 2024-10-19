@@ -72,14 +72,22 @@ WSGI_APPLICATION = 'stock_analysis_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'stock_analysis_db',         # Replace with your PostgreSQL database name
-        'USER': 'your_db_user',              # Replace with your PostgreSQL user
-        'PASSWORD': 'your_db_password',      # Replace with your PostgreSQL password
-        'HOST': 'localhost',                 # Replace if your database is hosted elsewhere
-        'PORT': '5432',                      # Default PostgreSQL port
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Commented out PostgreSQL configuration
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'stock_analysis_db',
+#         'USER': 'your_db_user',
+#         'PASSWORD': 'your_db_password',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
