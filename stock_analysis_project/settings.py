@@ -24,11 +24,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.authentication',
-    'apps.predictions',  # Corrected typo from 'predsictions' to 'predictions'
-    'apps.real_time_services',
+    'apps.predictions',
+    'apps.real_time_services.apps.RealTimeServicesConfig',  # Use AppConfig
     'apps.stock_analysis',
-    'apps.mock_api',  # Newly added
-    'corsheaders',  # Added for CORS support
+    'apps.mock_api',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
