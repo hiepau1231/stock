@@ -22,6 +22,10 @@ During the implementation of the Argon Dashboard Django template, it was discove
 - Be prepared to adapt the integration approach based on the actual project structure
 - Regularly check and update project documentation to reflect the current state and any deviations from expected processes
 
+## Custom Error Pages
+
+Custom error pages have been implemented to provide a consistent and user-friendly experience during error scenarios within the dashboard. These pages are integrated with the navigation templates to ensure seamless transitions and accessibility.
+
 #### Next Steps:
 - Continue with the integration process using the existing template files
 - Thoroughly test the frontend after integration to ensure proper functionality
