@@ -12,7 +12,9 @@ The Argon Dashboard Django template files were not found in the expected locatio
 3. Ensure the apps/home directory exists and contains necessary views and URL configurations
 4. Update existing templates to extend the Argon Dashboard base template
 5. Adjust views to render the appropriate Argon Dashboard templates
-6. Test the frontend to ensure proper rendering and functionality
+6. Verify template inheritance to avoid confusion with multiple `base.html` files
+7. Ensure that all referenced templates exist
+8. Test the frontend to ensure proper rendering and functionality
 
 ## Security and Import Enhancements
 - Move sensitive settings to environment variables
