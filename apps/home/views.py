@@ -21,6 +21,13 @@ def index(request):
 @login_required(login_url="/login/")
 def pages(request):
     context = {}
+
+    def custom_page_not_found_view(request, exception):
+        return render(request, "home/page-404.html", status=404)
+
+    def custom_error_view(request):
+        return render(request, "home/page-500.html", status=500)
+
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
     try:

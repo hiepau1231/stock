@@ -1,0 +1,23 @@
+<nav class="sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+    <div class="scrollbar-inner">
+        <div class="navbar-inner">
+            <!-- Brand -->
+            <div class="sidenav-header align-items-center">
+                <a class="navbar-brand" href="{% url 'home' %}">
+                    <img src="{% static 'assets/img/brand/logo.png' %}" class="navbar-brand-img" alt="...">
+                </a>
+            </div>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="ni ni-tv-2 text-primary"></i>
+                            <span class="nav-link-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <!-- Add additional sidebar items here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
