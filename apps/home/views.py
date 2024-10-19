@@ -51,5 +51,15 @@ def pages(request):
         return HttpResponse(html_template.render(context, request))
 from django.shortcuts import render
 
+@login_required
+def profile(request):
+    context = {'segment': 'profile'}
+    return render(request, 'home/profile.html', context)
+
+@login_required
+def map_view(request):
+    context = {'segment': 'map'}
+    return render(request, 'home/map.html', context)
+
 def home(request):
     return render(request, 'home/index.html')

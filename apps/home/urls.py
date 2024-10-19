@@ -10,4 +10,6 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('index/', views.index, name='index'),
     path('pages/<str:page>/', views.pages, name='pages'),
+    path('profile/', views.profile, name='profile'),
+    path('map/', views.map_view, name='map'),
 ]
