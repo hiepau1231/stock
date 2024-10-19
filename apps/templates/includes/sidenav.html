@@ -18,7 +18,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {% if 'icons' in segment %} active {% endif %}" href="/icons.html">
+            <a class="nav-link {% if 'icons' in segment %} active {% endif %}" href="{% url 'pages' page='icons.html' %}">
               <i class="ni ni-planet text-orange"></i>
               <span class="nav-link-text">Icons</span>
             </a>
@@ -36,7 +36,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {% if 'tables' in segment %} active {% endif %}" href="/tables.html">
+            <a class="nav-link {% if 'tables' in segment %} active {% endif %}" href="{% url 'pages' page='tables.html' %}">
               <i class="ni ni-bullet-list-67 text-default"></i>
               <span class="nav-link-text">Tables</span>
             </a>
@@ -55,10 +55,13 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-              <i class="ni ni-user-run text-red"></i>
-              <span class="nav-link-text">Logout</span>
-            </a>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="nav-link btn btn-link" style="padding: 0; margin: 0;">
+                    <i class="ni ni-user-run text-red"></i>
+                    <span class="nav-link-text">Logout</span>
+                </button>
+            </form>
           </li>            
         </ul>
         <!-- Divider -->
