@@ -54,14 +54,3 @@ def register_user(request):
         form = SignUpForm()
 
     return render(request, "accounts/register.html", {"form": form, "msg": msg, "success": success})
-from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
-
-def login_view(request):
-    return HttpResponse("Mock Login Page")
-
-def register_view(request):
-    return HttpResponse("Mock Register Page")
-
-def logout_view(request):
-    return HttpResponseRedirect(reverse('home'))
