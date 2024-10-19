@@ -5,9 +5,14 @@ Copyright (c) 2019 - present AppSeed.us
 
 # Create your views here.
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, views as auth_views
 from .forms import LoginForm, SignUpForm
 from django.urls import reverse
+
+
+class CustomLogoutView(auth_views.LogoutView):
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 
 def login_view(request):
