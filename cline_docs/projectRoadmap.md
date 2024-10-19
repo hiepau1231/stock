@@ -22,7 +22,7 @@
 
 ## Progress Tracker
 - Project initialization: Complete
-- User authentication: In progress
+- User authentication: Completed
 - Stock analysis features: Not started
-- Prediction models: Not started
-- Real-time services: Not started
+- Prediction models: In progress
+- Real-time services: In progress

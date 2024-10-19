@@ -14,7 +14,10 @@ The Argon Dashboard Django template files were not found in the expected locatio
 5. Adjust views to render the appropriate Argon Dashboard templates
 6. Test the frontend to ensure proper rendering and functionality
 
-## Related Tasks from projectRoadmap.md
+## Security and Import Enhancements
+- Move sensitive settings to environment variables
+- Restrict CORS settings for production
+- Review the predictions app models to resolve ImportError
 - [ ] Develop a stock analysis and prediction application
 
 ## Notes
@@ -27,6 +30,8 @@ The Argon Dashboard Django template files were not found in the expected locatio
 - [x] Identified the location of existing Argon Dashboard template files
 - [x] Updated settings.py with necessary configurations
 - [x] Updated main urls.py to include Argon Dashboard URLs
+- [ ] Begin transition from SQLite to PostgreSQL
+- [ ] Verify Frontend-Backend communication and integration
 
 ## Current Challenges
 - Ensuring proper integration of existing template files with the project structure
