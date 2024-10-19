@@ -1,13 +1,15 @@
-# stock_analysis_project/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/authentication/', include('apps.authentication.urls')),
-    path('api/real-time/', include('apps.real_time_services.urls')),
-    path('api/predictions/', include('apps.predictions.urls')),
-    path('api/stock-analysis/', include('apps.stock_analysis.urls')),
-    path('api/mock-api/', include('apps.mock_api.urls')),  # Added mock_api URLs
-    path('api/stock_analysis/', include('apps.stock_analysis.urls')),  # Added stock_analysis URLs
+    path("", include("apps.authentication.urls")),
+    path("", include("apps.home.urls")),
+    # Add other app URLs here
 ]
+
+# Serve static files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

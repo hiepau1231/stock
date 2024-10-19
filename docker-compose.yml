@@ -1,32 +1,28 @@
 version: '3.8'
-
 services:
-  web:
+  appseed-app:
+    container_name: appseed_app
+    restart: always
+    env_file: .env
     build: .
-    command: gunicorn stock_analysis_project.wsgi:application --bind 0.0.0.0:8000
-    volumes:
-      - .:/code
+    networks:
+      - db_network
+      - web_network
+  nginx:
+    container_name: nginx
+    restart: always
+    image: "nginx:latest"
     ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-
-  db:
-    image: postgres:13
+      - "85:85"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=stock_db
-      - POSTGRES_USER=stock_user
-      - POSTGRES_PASSWORD=password
-
-  redis:
-    image: redis:6
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      - web_network
+    depends_on: 
+      - appseed-app
+networks:
+  db_network:
+    driver: bridge
+  web_network:
+    driver: bridge
+ 

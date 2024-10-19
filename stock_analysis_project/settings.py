@@ -1,5 +1,3 @@
-# stock_analysis_project/settings.py
-
 import os
 from pathlib import Path
 
@@ -28,7 +26,9 @@ INSTALLED_APPS = [
     'apps.real_time_services.apps.RealTimeServicesConfig',  # Use AppConfig
     'apps.stock_analysis',
     'apps.mock_api',
+    'apps.home',  # Add the home app for Argon Dashboard
     'corsheaders',
+    'channels',  # Added Django Channels
 ]
 
 MIDDLEWARE = [
@@ -52,7 +52,10 @@ ROOT_URLCONF = 'stock_analysis_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Ensure the templates directory exists
+        'DIRS': [
+            os.path.join(BASE_DIR, 'apps/templates'),  # Argon Dashboard templates
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,10 +69,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'stock_analysis_project.wsgi.application'
+ASGI_APPLICATION = 'stock_analysis_project.asgi.application'  # Added for Django Channels
+
+# Channel Layers Configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -77,21 +86,7 @@ DATABASES = {
     }
 }
 
-# Commented out PostgreSQL configuration
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'stock_analysis_db',
-#         'USER': 'your_db_user',
-#         'PASSWORD': 'your_db_password',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -111,29 +106,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'  # Change to your local timezone if necessary
-
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = '/static/'
-# Option 1: Keep as BASE_DIR / 'static' and ensure the directory exists
-STATICFILES_DIRS = [BASE_DIR / 'static']
-
-# Option 2: If you moved the static directory, update the path accordingly
-# STATICFILES_DIRS = [Path('D:/lập trình/stock/static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'apps/static/assets'),
+]
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
@@ -152,4 +137,3 @@ REST_FRAMEWORK = {
 
 # Additional Settings (e.g., for Django Channels, CORS, etc.)
 # Add any other necessary settings below
-

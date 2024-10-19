@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import YourModelName
+from .models import Prediction
 
-admin.site.register(YourModelName)
+admin.site.register(Prediction)

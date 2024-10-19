@@ -1,6 +1,8 @@
-from django.contrib.auth.models import AbstractUser
+# -*- encoding: utf-8 -*-
+"""
+Copyright (c) 2019 - present AppSeed.us
+"""
+
 from django.db import models
 
-class CustomUser(AbstractUser):
-    # Add additional fields if necessary
-    pass
+# Create your models here.

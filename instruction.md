@@ -190,3 +190,53 @@ use this template : https://www.creative-tim.com/product/argon-dashboard-django
 DOCS:
 
 https://docs.djangoproject.com/en/5.1/topics/migrations/ 
+
+
+---------------------------------------------------------------------------------------------------------------------------
+
+Here's the project  structure 
+
+
+stock_analysis_project/
+├── manage.py
+├── stock_analysis_project/
+│ ├── init.py
+│ ├── settings.py
+│ ├── urls.py
+│ └── wsgi.py
+├── apps/
+│ ├── init.py
+│ ├── authentication/
+│ │ ├── init.py
+│ │ ├── models.py
+│ │ ├── views.py
+│ │ ├── urls.py
+│ │ └── serializers.py
+│ ├── stock_analysis/
+│ │ ├── init.py
+│ │ ├── models.py
+│ │ ├── views.py
+│ │ ├── urls.py
+│ │ └── serializers.py
+│ ├── predictions/
+│ │ ├── init.py
+│ │ ├── models.py
+│ │ ├── views.py
+│ │ ├── urls.py
+│ │ └── serializers.py
+│ └── real_time_services/
+│ ├── init.py
+│ ├── consumers.py
+│ ├── routing.py
+│ └── utils.py
+├── templates/
+│ └── base.html
+├── static/
+│ ├── css/
+│ ├── js/
+│ └── images/
+├── node_modules/
+├── package.json
+├── requirements.txt
+└── .gitignore
+

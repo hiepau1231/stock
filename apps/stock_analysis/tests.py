@@ -1,10 +1,22 @@
 from django.test import TestCase
-from .models import YourModelName
+from .models import Stock
 
-class YourModelTestCase(TestCase):
+class StockModelTestCase(TestCase):
     def setUp(self):
-        YourModelName.objects.create(field1='value1', field2='value2')
+        Stock.objects.create(symbol="AAPL", name="Apple Inc.", latest_price=150.00)
 
-    def test_model_creation(self):
-        obj = YourModelName.objects.get(field1='value1')
-        self.assertEqual(obj.field2, 'value2')
+    def test_stock_creation(self):
+        stock = Stock.objects.get(symbol="AAPL")
+        self.assertEqual(stock.name, "Apple Inc.")
+        self.assertEqual(stock.latest_price, 150.00)
+
+    def test_stock_str_representation(self):
+        stock = Stock.objects.get(symbol="AAPL")
+        self.assertEqual(str(stock), "AAPL - Apple Inc.")
+
+    def test_stock_price_update(self):
+        stock = Stock.objects.get(symbol="AAPL")
+        stock.latest_price = 160.00
+        stock.save()
+        updated_stock = Stock.objects.get(symbol="AAPL")
+        self.assertEqual(updated_stock.latest_price, 160.00)

@@ -1,132 +1,283 @@
-# Stock Analysis Platform
+# [Argon Dashboard Django](https://www.creative-tim.com/product/argon-dashboard-django) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/home?status=Material%20Dashboard,%20a%20free%20Material%20Bootstrap%204%20Admin%20Template%20%E2%9D%A4%EF%B8%8F%20https%3A//bit.ly/2Lyat1Y%20%23bootstrap%20%23material%20%23design%20%23developers%20%23freebie%20%20via%20%40CreativeTim)
 
-## Overview
+ ![version](https://img.shields.io/badge/version-1.0.1-blue.svg) [![GitHub issues open](https://img.shields.io/github/issues/creativetimofficial/argon-dashboard-django.svg?maxAge=2592000)](https://github.com/creativetimofficial/argon-dashboard-django/issues?q=is%3Aopen+is%3Aissue) [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/creativetimofficial/argon-dashboard-django.svg?maxAge=2592000)](https://github.com/creativetimofficial/argon-dashboard-django/issues?q=is%3Aissue+is%3Aclosed) [![Join the chat at https://gitter.im/NIT-dgp/General](https://badges.gitter.im/NIT-dgp/General.svg)](https://gitter.im/creative-tim-general/Lobby) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/E4aHAQy)
 
-The Stock Analysis Platform is a Django-based web application designed to provide real-time stock data analysis, user authentication, and predictions. It leverages Django Channels for real-time features and Django REST Framework for API endpoints.
+Open-source **[Django Template](https://www.creative-tim.com/templates/django)** crafted on top of **Argon Dashboard**, a modern Bootstrap 4 design. Start your development with a modern Bootstrap 4 Admin template for Django. Argon Dashboard is built with over 100 individual components, giving you the freedom of choosing and combining. If you want to code faster, with a smooth workflow, then you should try this template carefully developed with Django, a well-known Python Framework. **Django codebase** is crafted using a simple, modular structure that follows the best practices and provides authentication, database configuration, and deployment scripts for Docker and Gunicorn/Nginx stack. 
 
-## Features
+- Up-to-date [dependencies](./requirements.txt): **Django 3.2.6 LTS**
+- [SCSS compilation](#recompile-css) via **Gulp**
+- UI Kit: **Argon Dashboard** (Free Version)
+- Django Codebase - provided by **[AppSeed](https://appseed.us/)**
+- UI-Ready app, SQLite Database, Django Native ORM
+- Modular design, clean code-base
+- Session-Based Authentication, Forms validation
+- Deployment scripts: Docker, Gunicorn / Nginx
 
-- **User Authentication:** Secure user registration and login using a custom user model.
-- **Real-Time Stock Data:** Fetch and update stock prices in real-time using WebSockets.
-- **Stock Analysis:** Analyze stock performance with detailed metrics.
-- **Predictions:** Generate and store predictions for stock prices.
-- **RESTful APIs:** Access data through well-structured API endpoints.
+<br />
 
-## Technologies Used
+![Argon Dashboard Django - Admin Dashboard coded in Django.](https://github.com/creativetimofficial/argon-dashboard-django/blob/master/media/argon-dashboard-django-screen.png)
 
-- **Backend:** Django, Django REST Framework, Django Channels
-- **Frontend:** (Specify if applicable, e.g., React, Vue.js)
-- **Database:** PostgreSQL
-- **Real-Time Communication:** WebSockets
+<br />
 
-## Setup Instructions
+## Table of Contents
 
-### Prerequisites
+* [Demo](#demo)
+* [Quick Start](#quick-start)
+* [Documentation](#documentation)
+* [File Structure](#file-structure)
+* [Browser Support](#browser-support)
+* [Resources](#resources)
+* [Reporting Issues](#reporting-issues)
+* [Technical Support or Questions](#technical-support-or-questions)
+* [Licensing](#licensing)
+* [Useful Links](#useful-links)
 
-- Python 3.8+
-- PostgreSQL
-- Node.js & npm (if frontend is included)
-- Virtual Environment tool (e.g., `venv`)
+<br />
 
-### Installation
+## Demo
 
-1. **Clone the Repository:**
+> To authenticate use the default credentials ***test / ApS12_ZZs8*** or create a new user on the **registration page**.
 
-   ```bash
-   git clone https://github.com/your-username/stock-analysis-platform.git
-   cd stock-analysis-platform
-   ```
+- **Argon Dashboard Django** [Login Page](https://www.creative-tim.com/live/argon-dashboard-django)
+- **[Django Argon Charts](https://github.com/app-generator/django-argon-charts)** - sample projects that showcase real information in charts 
 
-2. **Set Up Virtual Environment:**
+<br />
 
-   ```bash
-   python3 -m venv env
-   source env/bin/activate  # On Windows: env\Scripts\activate
-   ```
+## Quick start
 
-3. **Install Dependencies:**
+> UNZIP the sources or clone the private repository. After getting the code, open a terminal and navigate to the working directory, with product source code.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure Environment Variables:**
-
-   - Create a `.env` file in the root directory.
-   - Add the necessary configurations (refer to `.env.example` if available).
-
-5. **Apply Migrations:**
-
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-6. **Create a Superuser:**
-
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. **Run the Development Server:**
-
-   ```bash
-   python manage.py runserver
-   ```
-
-8. **Access the Application:**
-
-   Open your browser and navigate to `http://localhost:8000/`
-
-### Running Tests
-
-*(If tests are implemented, provide instructions here.)*
-
-### Deployment
-
-*(Provide deployment instructions, e.g., using Docker, Heroku, AWS, etc.)*
-
-## Project Structure
-
-```
-stock_analysis_project/
-├── apps/
-│   ├── authentication/
-│   ├── predictions/
-│   ├── real_time_services/
-│   └── stock_analysis/
-├── templates/
-├── static/
-├── manage.py
-├── requirements.txt
-├── package.json
-├── README.md
-└── ...
+```bash
+$ # Get the code
+$ git clone https://github.com/creativetimofficial/argon-dashboard-django.git
+$ cd argon-dashboard-django
+$
+$ # Virtualenv modules installation (Unix based systems)
+$ virtualenv env
+$ source env/bin/activate
+$
+$ # Virtualenv modules installation (Windows based systems)
+$ # virtualenv env
+$ # .\env\Scripts\activate
+$
+$ # Install modules - SQLite Storage
+$ pip3 install -r requirements.txt
+$
+$ # Create tables
+$ python manage.py makemigrations
+$ python manage.py migrate
+$
+$ # Start the application (development mode)
+$ python manage.py runserver # default port 8000
+$
+$ # Start the app - custom port
+$ # python manage.py runserver 0.0.0.0:<your_port>
+$
+$ # Access the web app in browser: http://127.0.0.1:8000/
 ```
 
-## Contributing
+> Note: To use the app, please access the registration page and create a new user. After authentication, the app will unlock the private pages.
 
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+<br />
 
-## License
+## Documentation
+The documentation for the **Argon Dashboard Django** is hosted at our [website](https://demos.creative-tim.com/argon-dashboard-django/docs/getting-started/getting-started-django.html).
 
-*(Specify the license, e.g., MIT License.)*
+<br />
 
-## Contact
+## Code-base structure
 
-For any inquiries or support, please contact [your-email@example.com](mailto:your-email@example.com).
-### Temporary Mock Data Usage
+The project is coded using a simple and intuitive structure presented bellow:
 
-For demonstration purposes, the application currently uses mock data instead of real API calls. This allows us to showcase the application's structure and functionality without relying on incomplete backend services.
+```bash
+< PROJECT ROOT >
+   |
+   |-- core/                               # Implements app configuration
+   |    |-- settings.py                    # Defines Global Settings
+   |    |-- wsgi.py                        # Start the app in production
+   |    |-- urls.py                        # Define URLs served by all apps/nodes
+   |
+   |-- apps/
+   |    |
+   |    |-- home/                          # A simple app that serve HTML files
+   |    |    |-- views.py                  # Serve HTML pages for authenticated users
+   |    |    |-- urls.py                   # Define some super simple routes  
+   |    |
+   |    |-- authentication/                # Handles auth routes (login and register)
+   |    |    |-- urls.py                   # Define authentication routes  
+   |    |    |-- views.py                  # Handles login and registration  
+   |    |    |-- forms.py                  # Define auth forms (login and register) 
+   |    |
+   |    |-- static/
+   |    |    |-- <css, JS, images>         # CSS files, Javascripts files
+   |    |
+   |    |-- templates/                     # Templates used to render pages
+   |         |-- includes/                 # HTML chunks and components
+   |         |    |-- navigation.html      # Top menu component
+   |         |    |-- sidebar.html         # Sidebar component
+   |         |    |-- footer.html          # App Footer
+   |         |    |-- scripts.html         # Scripts common to all pages
+   |         |
+   |         |-- layouts/                   # Master pages
+   |         |    |-- base-fullscreen.html  # Used by Authentication pages
+   |         |    |-- base.html             # Used by common pages
+   |         |
+   |         |-- accounts/                  # Authentication pages
+   |         |    |-- login.html            # Login page
+   |         |    |-- register.html         # Register page
+   |         |
+   |         |-- home/                      # UI Kit Pages
+   |              |-- index.html            # Index page
+   |              |-- 404-page.html         # 404 page
+   |              |-- *.html                # All other pages
+   |
+   |-- requirements.txt                     # Development modules - SQLite storage
+   |
+   |-- .env                                 # Inject Configuration via Environment
+   |-- manage.py                            # Start the app - Django default start script
+   |
+   |-- ************************************************************************
+```
 
-**Mock Data Endpoints:**
-- `/api/stock_analysis/mock_stock_data/`
+<br />
 
-**Frontend Changes:**
-- API calls in the frontend have been updated to fetch data from the mock endpoints.
+> The bootstrap flow
 
-**Backend Changes:**
-- New views and URL patterns have been added to serve mock data.
+- Django bootstrapper `manage.py` uses `core/settings.py` as the main configuration file
+- `core/settings.py` loads the app magic from `.env` file
+- Redirect the guest users to Login page
+- Unlock the pages served by *app* node for authenticated users
 
-**Future Steps:**
-- Once the backend is fully implemented, replace the mock data with actual API calls.
+<br />
+
+## Recompile CSS
+
+To recompile SCSS files, follow this setup:
+
+<br />
+
+**Step #1** - Install tools
+
+- [NodeJS](https://nodejs.org/en/) 12.x or higher
+- [Gulp](https://gulpjs.com/) - globally 
+    - `npm install -g gulp-cli`
+- [Yarn](https://yarnpkg.com/) (optional) 
+
+<br />
+
+**Step #2** - Change the working directory to `assets` folder
+
+```bash
+$ cd apps/static/assets
+```
+
+<br />
+
+**Step #3** - Install modules (this will create a classic `node_modules` directory)
+
+```bash
+$ npm install
+// OR
+$ yarn
+```
+
+<br />
+
+**Step #4** - Edit & Recompile SCSS files 
+
+```bash
+$ gulp scss
+```
+
+The generated file is saved in `static/assets/css` directory.
+
+<br /> 
+
+## Deployment
+
+The app is provided with a basic configuration to be executed in [Docker](https://www.docker.com/), [Gunicorn](https://gunicorn.org/), and [Waitress](https://docs.pylonsproject.org/projects/waitress/en/stable/).
+
+### [Docker](https://www.docker.com/) execution
+---
+
+The application can be easily executed in a docker container. The steps:
+
+> Get the code
+
+```bash
+$ git clone https://github.com/creativetimofficial/argon-dashboard-django.git
+$ cd argon-dashboard-django
+```
+
+> Start the app in Docker
+
+```bash
+$ sudo docker-compose pull && sudo docker-compose build && sudo docker-compose up -d
+```
+
+Visit `http://localhost:85` in your browser. The app should be up & running.
+
+<br />
+
+## Browser Support
+
+At present, we officially aim to support the last two versions of the following browsers:
+
+<img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/chrome.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/firefox.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/edge.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/safari.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/opera.png" width="64" height="64">
+
+<br />
+
+## Resources
+
+- Demo: <https://www.creative-tim.com/live/argon-dashboard-django>
+- Download Page: <https://www.creative-tim.com/product/argon-dashboard-django>
+- Documentation: <https://demos.creative-tim.com/argon-dashboard-django/docs/1.0/getting-started/getting-started-django.html>
+- License Agreement: <https://www.creative-tim.com/license>
+- Support: <https://www.creative-tim.com/contact-us>
+- Issues: [Github Issues Page](https://github.com/creativetimofficial/argon-dashboard-django/issues)
+
+<br />
+
+## Reporting Issues
+
+We use GitHub Issues as the official bug tracker for the **Argon Dashboard Django**. Here are some advices for our users that want to report an issue:
+
+1. Make sure that you are using the latest version of the **Argon Dashboard Django**. Check the CHANGELOG from your dashboard on our [website](https://www.creative-tim.com/).
+2. Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
+3. Some issues may be browser-specific, so specifying in what browser you encountered the issue might help.
+
+<br />
+
+## Technical Support or Questions
+
+If you have questions or need help integrating the product please [contact us](https://www.creative-tim.com/contact-us) instead of opening an issue.
+
+<br />
+
+## Licensing
+
+- Copyright 2019 - present [Creative Tim](https://www.creative-tim.com/)
+- Licensed under [Creative Tim EULA](https://www.creative-tim.com/license)
+
+<br />
+
+## Useful Links
+
+- [More products](https://www.creative-tim.com/bootstrap-themes) from Creative Tim
+- [Tutorials](https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w)
+- [Freebies](https://www.creative-tim.com/bootstrap-themes/free) from Creative Tim
+- [Affiliate Program](https://www.creative-tim.com/affiliates/new) (earn money)
+
+<br />
+
+## Social Media
+
+- Twitter: <https://twitter.com/CreativeTim>
+- Facebook: <https://www.facebook.com/CreativeTim>
+- Dribbble: <https://dribbble.com/creativetim>
+- Instagram: <https://www.instagram.com/CreativeTimOfficial>
+
+<br />
+
+---
+[Argon Dashboard - Django Template](https://www.creative-tim.com/product/argon-dashboard-django) - Provided by [Creative Tim](https://www.creative-tim.com/) and [AppSeed](https://appseed.us)
