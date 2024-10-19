@@ -125,7 +125,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
+# Option 1: Keep as BASE_DIR / 'static' and ensure the directory exists
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Option 2: If you moved the static directory, update the path accordingly
+# STATICFILES_DIRS = [Path('D:/lập trình/stock/static')]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
