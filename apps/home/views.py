@@ -10,7 +10,7 @@ from django.template import loader
 from django.urls import reverse
 
 
-@login_required(login_url="/login/")
+@login_required
 def index(request):
     context = {'segment': 'index'}
 
@@ -18,7 +18,7 @@ def index(request):
     return HttpResponse(html_template.render(context, request))
 
 
-@login_required(login_url="/login/")
+@login_required
 def pages(request):
     context = {}
 

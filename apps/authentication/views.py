@@ -7,6 +7,7 @@ Copyright (c) 2019 - present AppSeed.us
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .forms import LoginForm, SignUpForm
+from django.urls import reverse
 
 
 def login_view(request):
@@ -43,7 +44,8 @@ def register_user(request):
             raw_password = form.cleaned_data.get("password1")
             user = authenticate(username=username, password=raw_password)
 
-            msg = 'User created - please <a href="/login">login</a>.'
+            login_url = reverse("login")
+            msg = f'User created - please <a href="{login_url}">login</a>.'
             success = True
 
             # return redirect("/login/")
