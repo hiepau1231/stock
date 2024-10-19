@@ -3,6 +3,5 @@ from . import views
 
 urlpatterns = [
     # Define your real_time_services URL patterns here
-    # Example:
-    # path('status/', views.status_view, name='status'),
+    path('example/', views.example_view, name='example'),
 ]
