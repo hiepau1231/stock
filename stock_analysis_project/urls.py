@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.urls import path, include  # Added include
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -8,9 +7,10 @@ from apps.home.views import custom_page_not_found_view, custom_error_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('apps.home.urls')),
-    path("", include("apps.authentication.urls")),
-    path("", include("apps.home.urls")),
+    path('', include('apps.home.urls')),  # Đảm bảo dòng này tồn tại
+    path('', include('apps.authentication.urls')),
+    path('stock/', include('apps.stock_analysis.urls')),
+    path('predictions/', include('apps.predictions.urls')),
     # Add other app URLs here
 ]
 

@@ -183,6 +183,15 @@ A clear and organized project structure is crucial for maintainability and scala
 - **Production Migration**: Plan for migration from SQLite to PostgreSQL before deployment to production.
 - **Data Integrity**: Ensure all data is properly transferred during the migration process.
 
+### 8. Web Scraping Implementation
+- **Tool Selection**: Use Selenium WebDriver with Chrome in headless mode for web scraping.
+- **Data Source**: Scrape stock data from specified financial websites.
+- **Data Processing**: Implement data cleaning and formatting procedures for scraped data.
+- **Storage**: Store scraped data in the SQLite database (initially) and later in PostgreSQL.
+- **Scheduling**: Set up periodic scraping tasks to keep data up-to-date.
+- **Error Handling**: Implement robust error handling and logging for the scraping process.
+- **Legal Considerations**: Ensure compliance with the terms of service of the websites being scraped.
+
 ## Appendices
 
 [To be added as needed]

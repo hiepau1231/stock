@@ -23,8 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.authentication',
     'apps.predictions',
-    'apps.home',  # Add the home app for Argon Dashboard
-    'apps.real_time_services.apps.RealTimeServicesConfig',  # Use AppConfig
+    'apps.real_time_services',
     'apps.stock_analysis',
     'apps.mock_api',
     'apps.home',  # Add the home app for Argon Dashboard
@@ -54,8 +53,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'apps/templates'),  # Argon Dashboard templates
-            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, "apps/templates"),
+            os.path.join(BASE_DIR, "apps/static/assets"),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -116,8 +115,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'apps/static/assets'),
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, "apps/static"),
 ]
 
 # Default primary key field type

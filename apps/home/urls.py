@@ -7,9 +7,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('index/', views.index, name='index'),
-    path('pages/<str:page>/', views.pages, name='pages'),
-    path('profile/', views.profile, name='profile'),
+    path('', views.index, name='home'),
+    path('<str:template_name>', views.pages, name='pages'),
     path('map/', views.map_view, name='map'),
+    path('profile/', views.profile, name='profile'),
 ]
