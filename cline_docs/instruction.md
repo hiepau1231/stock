@@ -128,7 +128,7 @@ A clear and organized project structure is crucial for maintainability and scala
 
 ## External Dependencies
 
-- **PostgreSQL**: Database management system for storing application data.
+- **SQLite**: Initial database management system for storing application data during development.
 - **Node.js**: JavaScript runtime for handling real-time WebSocket connections.
 - **Python Packages**: Listed in `requirements.txt`, including Django and other necessary packages.
 - **Node.js Packages**: Listed in `package.json`, including packages for WebSocket management and frontend functionalities.
@@ -178,6 +178,11 @@ A clear and organized project structure is crucial for maintainability and scala
 - **Automated Testing**: Implement unit tests and integration tests to ensure code quality and reliability.
 - **Continuous Integration**: Set up CI pipelines to automate testing and deployment processes.
 
+### 7. Database Migration
+- **Initial Development**: Use SQLite for initial development and testing.
+- **Production Migration**: Plan for migration from SQLite to PostgreSQL before deployment to production.
+- **Data Integrity**: Ensure all data is properly transferred during the migration process.
+
 ## Appendices
 
 [To be added as needed]
@@ -185,6 +190,8 @@ A clear and organized project structure is crucial for maintainability and scala
 -----------------------------------------------------------------------------
 Web Scraping: Use a web scraping tool to gather real-time data for stock prices and financial reports from the market. This data will be updated regularly.
 use this template : https://www.creative-tim.com/product/argon-dashboard-django
+
+✅ Hoàn thành: Template Argon Dashboard Django đã được tích hợp vào dự án.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 DOCS:
@@ -200,43 +207,44 @@ Here's the project  structure
 stock_analysis_project/
 ├── manage.py
 ├── stock_analysis_project/
-│ ├── init.py
-│ ├── settings.py
-│ ├── urls.py
-│ └── wsgi.py
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
 ├── apps/
-│ ├── init.py
-│ ├── authentication/
-│ │ ├── init.py
-│ │ ├── models.py
-│ │ ├── views.py
-│ │ ├── urls.py
-│ │ └── serializers.py
-│ ├── stock_analysis/
-│ │ ├── init.py
-│ │ ├── models.py
-│ │ ├── views.py
-│ │ ├── urls.py
-│ │ └── serializers.py
-│ ├── predictions/
-│ │ ├── init.py
-│ │ ├── models.py
-│ │ ├── views.py
-│ │ ├── urls.py
-│ │ └── serializers.py
-│ └── real_time_services/
-│ ├── init.py
-│ ├── consumers.py
-│ ├── routing.py
-│ └── utils.py
+│   ├── __init__.py
+│   ├── authentication/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── serializers.py
+│   ├── stock_analysis/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── serializers.py
+│   ├── predictions/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── serializers.py
+│   └── real_time_services/
+│       ├── __init__.py
+│       ├── consumers.py
+│       ├── routing.py
+│       └── utils.py
 ├── templates/
-│ └── base.html
+│   └── base.html
 ├── static/
-│ ├── css/
-│ ├── js/
-│ └── images/
+│   ├── css/
+│   ├── js/
+│   └── images/
 ├── node_modules/
 ├── package.json
 ├── requirements.txt
 └── .gitignore
 
+✅ Hoàn thành: Cấu trúc dự án đã được thiết lập theo đề xuất.
