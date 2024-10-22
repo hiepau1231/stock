@@ -1,178 +1,68 @@
-from django.shortcuts import render, get_object_or_404
-
-
-
-from .models import Stock, StockPrice
-
-
-
-from django.db.models import Avg, Max, Min
-
-
-
-import pandas as pd
-
-
-
-
-
-
-
-def home_view(request):
-
-
-
-    return render(request, 'base.html')
-
-
-
-
-
-
-
-def stock_detail(request, symbol):
-
-
-
-    stock = get_object_or_404(Stock, symbol=symbol)
-
-
-
-    prices = StockPrice.objects.filter(stock=stock).order_by('-date')[:30]
-
-
-
-    
-
-
-
-    df = pd.DataFrame(list(prices.values()))
-
-
-
-    
-
-
-
-    if not df.empty:
-
-
-
-        avg_price = df['close_price'].mean()
-
-
-
-        max_price = df['high_price'].max()
-
-
-
-        min_price = df['low_price'].min()
-
-
-
-        
-
-
-
-        df['price_change'] = df['close_price'].diff()
-
-
-
-        df['gain'] = df['price_change'].clip(lower=0)
-
-
-
-        df['loss'] = -1 * df['price_change'].clip(upper=0)
-
-
-
-        avg_gain = df['gain'].mean()
-
-
-
-        avg_loss = df['loss'].mean()
-
-
-
-        rs = avg_gain / avg_loss if avg_loss != 0 else 0
-
-
-
-        rsi = 100 - (100 / (1 + rs))
-
-
-
-    else:
-
-
-
-        avg_price = max_price = min_price = rsi = 0
-
-
-
-    
-
-
-
-    context = {
-
-
-
-        'stock': stock,
-
-
-
-        'prices': prices,
-
-
-
-        'avg_price': avg_price,
-
-
-
-        'max_price': max_price,
-
-
-
-        'min_price': min_price,
-
-
-
-        'rsi': rsi,
-
-
-
-    }
-
-
-
-    return render(request, 'stock_analysis/stock_detail.html', context)
-
-
-
-
-
-
-
-def stock_list(request):
-    stocks = Stock.objects.all()
-    return render(request, 'stock_analysis/stock_list.html', {'stocks': stocks})
-
-
-
-
-
-
-
-def dashboard(request):
-
-
-
-    return render(request, 'stock_analysis/dashboard.html')
-
-
-
-
-
-
-
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Stock, StockPrice
+import pandas as pd
+import numpy as np
+from .web_scraping_script import scrape_stock_data
+
+def stock_detail(request, symbol):
+    stock = get_object_or_404(Stock, symbol=symbol)
+    prices = StockPrice.objects.filter(stock=stock).order_by('-date')[:30]
+    
+    df = pd.DataFrame(list(prices.values()))
+    
+    if not df.empty:
+        # Tính toán các chỉ số kỹ thuật
+        df['SMA_20'] = df['close_price'].rolling(window=20).mean()
+        df['EMA_20'] = df['close_price'].ewm(span=20, adjust=False).mean()
+        
+        # Tính RSI
+        delta = df['close_price'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df['RSI'] = 100 - (100 / (1 + rs))
+        
+        latest_price = df.iloc[0]
+        context = {
+            'stock': stock,
+            'latest_price': latest_price,
+            'prices': prices,
+            'sma_20': latest_price['SMA_20'],
+            'ema_20': latest_price['EMA_20'],
+            'rsi': latest_price['RSI'],
+        }
+    else:
+        context = {'stock': stock, 'prices': []}
+    
+    return render(request, 'stock_analysis/stock_detail.html', context)
+
+def stock_list(request):
+    stocks = Stock.objects.all()
+    return render(request, 'stock_analysis/stock_list.html', {'stocks': stocks})
+
+def update_stock_data(request):
+    stocks = Stock.objects.all()
+    for stock in stocks:
+        try:
+            scrape_stock_data(stock.symbol)
+            messages.success(request, f"Dữ liệu cho {stock.symbol} đã được cập nhật.")
+        except Exception as e:
+            messages.error(request, f"Lỗi khi cập nhật dữ liệu cho {stock.symbol}: {str(e)}")
+    return redirect('stock_analysis:stock_dashboard')
+
+def dashboard(request):
+    stocks = Stock.objects.all()
+    stock_data = []
+    for stock in stocks:
+        latest_price = stock.prices.order_by('-date').first()
+        if latest_price:
+            stock_data.append({
+                'symbol': stock.symbol,
+                'name': stock.name,
+                'price': latest_price.close_price,
+                'date': latest_price.date,
+                'change': latest_price.close_price - stock.prices.order_by('-date')[1].close_price if stock.prices.count() > 1 else 0
+            })
+    context = {'stock_data': stock_data}
+    return render(request, 'stock_analysis/dashboard.html', context)
