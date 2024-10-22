@@ -1,0 +1,53 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Stock List {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <div class="card-header border-0">
+          <h3 class="mb-0">Stock List</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Name</th>
+                <th scope="col">Latest Price</th>
+                <th scope="col">Change</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for stock in stocks %}
+              <tr>
+                <td>{{ stock.symbol }}</td>
+                <td>{{ stock.name }}</td>
+                <td>{{ stock.prices.first.close_price|default:"N/A" }}</td>
+                <td>
+                  {% with change=stock.prices.first.close_price|default:0|sub:stock.prices.last.close_price|default:0 %}
+                    {% if change > 0 %}
+                      <span class="text-success">+{{ change|floatformat:2 }}</span>
+                    {% elif change < 0 %}
+                      <span class="text-danger">{{ change|floatformat:2 }}</span>
+                    {% else %}
+                      0.00
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                <td>
+                  <a href="{% url 'stock_detail' stock.symbol %}" class="btn btn-sm btn-primary">View Details</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

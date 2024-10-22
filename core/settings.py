@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.home',            # Enable the inner home (home)
     'apps.authentication',  # Add this line
+    'apps.stock_analysis',  # Thêm dòng này
 ]
 
 MIDDLEWARE = [
@@ -125,3 +126,5 @@ STATICFILES_DIRS = (
 
 #############################################################
 #############################################################
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

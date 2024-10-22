@@ -1,0 +1,50 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} {{ stock.name }} Details {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col-xl-8">
+      <div class="card">
+        <div class="card-header border-0">
+          <h3 class="mb-0">{{ stock.name }} ({{ stock.symbol }})</h3>
+        </div>
+        <div class="card-body">
+          <p>Sector: {{ stock.sector }}</p>
+          <p>Industry: {{ stock.industry }}</p>
+          <p>Average Price (30 days): ${{ avg_price|floatformat:2 }}</p>
+          <p>Highest Price (30 days): ${{ max_price|floatformat:2 }}</p>
+          <p>Lowest Price (30 days): ${{ min_price|floatformat:2 }}</p>
+          <p>RSI (14-day): {{ rsi|floatformat:2 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="card">
+        <div class="card-header border-0">
+          <h3 class="mb-0">Recent Prices</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Close Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for price in prices %}
+              <tr>
+                <td>{{ price.date }}</td>
+                <td>${{ price.close_price|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
