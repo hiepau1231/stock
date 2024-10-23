@@ -1,74 +1,87 @@
 {% extends "layouts/base.html" %}
 
-
-
-
-
-
-
-{% block title %} Stock Analysis Dashboard {% endblock %}
-
-
-
-
-
-
+{% block title %} Market Overview {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt--6">
   <div class="row">
     <div class="col-xl-12">
       <div class="card">
-        <div class="card-header border-0">
-          <h3 class="mb-0">Market Overview</h3>
-          <a href="{% url 'stock_analysis:update_stock_data' %}" class="btn btn-primary float-right">Cập nhật dữ liệu</a>
+        <div class="card-header border-0 d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">Market Indices</h3>
+          <div>
+            <span id="last-update" class="text-muted mr-3">
+              Last updated: {% if stock_data %}{{ stock_data.0.date|date:"d/m/Y" }}{% endif %}
+            </span>
+            <a href="{% url 'stock_analysis:update_stock_data' %}" class="btn btn-primary">
+              <i class="fas fa-sync-alt"></i> Cập nhật dữ liệu
+            </a>
+          </div>
         </div>
+        
+        {% if stock_data %}
         <div class="table-responsive">
           <table class="table align-items-center table-flush">
             <thead class="thead-light">
               <tr>
-                <th scope="col">Symbol</th>
-                <th scope="col">Name</th>
+                <th scope="col">Index</th>
                 <th scope="col">Price</th>
                 <th scope="col">Change</th>
-                <th scope="col">Last Updated</th>
+                <th scope="col">Change %</th>
+                <th scope="col">Volume</th>
               </tr>
             </thead>
             <tbody>
               {% for stock in stock_data %}
               <tr>
-                <td>{{ stock.symbol }}</td>
-                <td>{{ stock.name }}</td>
-                <td>${{ stock.price|floatformat:2 }}</td>
+                <td>
+                  <span class="font-weight-bold">{{ stock.name }}</span>
+                </td>
+                <td>{{ stock.price|floatformat:2 }}</td>
                 <td class="{% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% endif %}">
+                  <i class="fas fa-{% if stock.change > 0 %}arrow-up{% elif stock.change < 0 %}arrow-down{% else %}minus{% endif %}"></i>
                   {{ stock.change|floatformat:2 }}
                 </td>
-                <td>{{ stock.date }}</td>
+                <td class="{% if stock.change_percent > 0 %}text-success{% elif stock.change_percent < 0 %}text-danger{% endif %}">
+                  {{ stock.change_percent|floatformat:2 }}%
+                </td>
+                <td>{{ stock.volume|default:"N/A" }}</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
+        {% else %}
+        <div class="text-center py-4">
+          <p class="text-muted">No data available. Please update the data.</p>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
-{% endblock content %}
-
-
-
-
-
-
-
-
 
 {% if messages %}
-<div class="messages">
+<div class="messages position-fixed bottom-0 right-0 p-3" style="z-index: 1050">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %} mr-2"></i>
         {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
     {% endfor %}
 </div>
 {% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+{{ block.super }}
+<script>
+  // Auto-hide messages after 5 seconds
+  setTimeout(function() {
+    $('.alert').alert('close');
+  }, 5000);
+</script>
+{% endblock javascripts %}

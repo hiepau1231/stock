@@ -1,10 +1,10 @@
 # Nhiệm Vụ Hiện Tại
 
 ## Mục Tiêu
-Hoàn thiện chức năng phân tích cổ phiếu và tối ưu hóa quá trình web scraping.
+Hoàn thiện chức năng web scraping và cải thiện hiển thị dữ liệu chỉ số thị trường.
 
 ## Bối Cảnh
-Chúng ta đã tích hợp thành công template Argon Dashboard Django, thiết lập cơ sở dữ liệu SQLite, và triển khai chức năng web scraping cơ bản. Hiện tại, chúng ta cần tập trung vào việc cải thiện chức năng phân tích và đảm bảo quá trình cập nhật dữ liệu hoạt động hiệu quả.
+Chúng ta đã tích hợp thành công template Argon Dashboard Django và thiết lập cơ sở dữ liệu SQLite. Script web scraping đã được tạo nhưng đang gặp vấn đề với việc lấy dữ liệu từ trang web nguồn.
 
 ## Các Nhiệm Vụ Đã Hoàn Thành
 ✅ Thiết lập cấu trúc dự án ban đầu
@@ -15,46 +15,41 @@ Chúng ta đã tích hợp thành công template Argon Dashboard Django, thiết
 ✅ Đăng nhập thành công với tài khoản superuser
 ✅ Tạo script web scraping ban đầu
 ✅ Tích hợp chức năng cập nhật dữ liệu vào giao diện người dùng
+✅ Thêm template filters cho tính toán thay đổi giá
 ✅ Cải thiện xử lý lỗi và logging trong quá trình web scraping
 
 ## Các Bước Tiếp Theo
-1. Hoàn thiện chức năng phân tích cổ phiếu:
-   - Thêm các chỉ số phân tích kỹ thuật phức tạp hơn
-   - Cải thiện hiển thị dữ liệu trong trang chi tiết cổ phiếu
-   - Thêm biểu đồ để trực quan hóa dữ liệu
+1. Sửa lỗi web scraping:
+   - Xác định đúng URL và cấu trúc HTML của trang web nguồn
+   - Cập nhật script để phù hợp với cấu trúc mới
+   - Thêm xử lý lỗi và retry logic
+   - Kiểm tra và đảm bảo dữ liệu được lưu vào database
 
-2. Tối ưu hóa quá trình web scraping:
-   - Cải thiện hiệu suất và độ tin cậy của quá trình scraping
-   - Xử lý các trường hợp ngoại lệ và lỗi một cách chi tiết hơn
-   - Thêm cơ chế retry cho các yêu cầu không thành công
+2. Cải thiện hiển thị dữ liệu:
+   - Hiển thị dữ liệu chỉ số HNX và UPCOM trên dashboard
+   - Thêm biểu đồ cho dữ liệu lịch sử
+   - Cải thiện giao diện hiển thị thông báo lỗi/thành công
 
-3. Cải thiện giao diện người dùng:
-   - Thêm trang tổng quan thị trường
-   - Cải thiện hiển thị thông báo khi cập nhật dữ liệu
+3. Tối ưu hóa hiệu suất:
+   - Thêm caching cho dữ liệu chỉ số
+   - Tối ưu hóa truy vấn database
+   - Cải thiện thời gian phản hồi của web scraping
 
-4. Tối ưu hóa hiệu suất:
-   - Xem xét việc sử dụng caching để cải thiện thời gian phản hồi
-   - Tối ưu hóa các truy vấn cơ sở dữ liệu
-
-5. Kiểm thử:
-   - Viết unit tests cho các chức năng quan trọng
-   - Thực hiện kiểm thử tích hợp
-
-6. Tài liệu hóa:
-   - Cập nhật README.md với hướng dẫn cài đặt và sử dụng mới nhất
-   - Viết tài liệu API nếu có kế hoạch cung cấp
+4. Kiểm thử:
+   - Viết unit tests cho web scraping
+   - Kiểm thử tích hợp cho toàn bộ quy trình
 
 ## Thách Thức Hiện Tại
-- Đảm bảo quá trình web scraping hoạt động ổn định và hiệu quả
-- Xử lý các vấn đề tiềm ẩn với web scraping (ví dụ: giới hạn tốc độ, thay đổi cấu trúc website)
-- Cải thiện hiệu suất của ứng dụng khi xử lý lượng lớn dữ liệu
+- Xác định đúng cấu trúc HTML của trang web nguồn
+- Đảm bảo web scraping hoạt động ổn định
+- Xử lý các trường hợp lỗi khi không lấy được dữ liệu
 
-## Kế Hoạch Tương Lai
-- Triển khai các tính năng dự đoán sử dụng machine learning
-- Chuẩn bị cho việc chuyển đổi từ SQLite sang PostgreSQL
-- Xem xét việc triển khai real-time updates sử dụng WebSockets
+## Ưu Tiên
+1. Sửa lỗi web scraping để lấy được dữ liệu chỉ số
+2. Cải thiện hiển thị dữ liệu trên dashboard
+3. Thêm các tính năng phân tích cơ bản
 
 ## Lưu Ý
-- Thường xuyên commit các thay đổi vào hệ thống quản lý phiên bản
-- Chú ý đến vấn đề bảo mật, đặc biệt khi xử lý dữ liệu người dùng và API keys
-- Đảm bảo tuân thủ các quy định về scraping dữ liệu từ các trang web tài chính
+- Kiểm tra log để debug web scraping
+- Đảm bảo xử lý lỗi đầy đủ
+- Cập nhật tài liệu khi có thay đổi
