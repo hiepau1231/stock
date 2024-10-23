@@ -1,10 +1,133 @@
 {% extends "layouts/base.html" %}
 
+{% block title %} Dashboard {% endblock %}
+
 {% block content %}
-<div class="container-fluid mt--7">
-    <!-- Dashboard content goes here -->
-    <h1>Dashboard</h1>
-    <p>Welcome to the Stock Analysis Platform Dashboard.</p>
-    <!-- Add Argon Dashboard components as needed -->
+<div class="header bg-gradient-primary pb-8 pt-5 pt-md-8">
+    <div class="container-fluid">
+        <div class="header-body">
+            <!-- Card stats -->
+            <div class="row">
+                <div class="col-xl-3 col-lg-6">
+                    <div class="card card-stats mb-4 mb-xl-0">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col">
+                                    <h5 class="card-title text-uppercase text-muted mb-0">HNX Index</h5>
+                                    <span class="h2 font-weight-bold mb-0">{{ hnx_index|default:"N/A" }}</span>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="icon icon-shape bg-danger text-white rounded-circle shadow">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6">
+                    <div class="card card-stats mb-4 mb-xl-0">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col">
+                                    <h5 class="card-title text-uppercase text-muted mb-0">UPCOM Index</h5>
+                                    <span class="h2 font-weight-bold mb-0">{{ upcom_index|default:"N/A" }}</span>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
+
+<div class="container-fluid mt--7">
+    <div class="row">
+        <div class="col-xl-8 mb-5 mb-xl-0">
+            <div class="card">
+                <div class="card-header border-0">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="mb-0">Quick Links</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card card-lift--hover shadow border-0 mb-4">
+                                <a href="{% url 'stock_analysis:stock_dashboard' %}" class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <div class="icon icon-shape bg-primary text-white rounded-circle shadow">
+                                                <i class="fas fa-chart-area"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col ml--2">
+                                            <h4 class="mb-0">Market Overview</h4>
+                                            <p class="text-sm text-muted mb-0">View market indices and trends</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card card-lift--hover shadow border-0 mb-4">
+                                <a href="{% url 'stock_analysis:stock_list' %}" class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <div class="icon icon-shape bg-success text-white rounded-circle shadow">
+                                                <i class="fas fa-list"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col ml--2">
+                                            <h4 class="mb-0">Stock List</h4>
+                                            <p class="text-sm text-muted mb-0">Browse all available stocks</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header border-0">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="mb-0">System Status</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <h4 class="text-success mb-4">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            System is running normally
+                        </h4>
+                        <p class="text-muted">
+                            Last data update: 
+                            <span id="last-update">{{ last_update|default:"Not available" }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+{{ block.super }}
+<script>
+    // Thêm các script cần thiết ở đây
+</script>
+{% endblock javascripts %}
