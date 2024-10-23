@@ -1,4 +1,6 @@
 {% extends "layouts/base.html" %}
+{% load currency_filters %}
+{% load stock_filters %}
 
 {% block title %} Dashboard {% endblock %}
 
@@ -14,7 +16,7 @@
                             <div class="row">
                                 <div class="col">
                                     <h5 class="card-title text-uppercase text-muted mb-0">HNX Index</h5>
-                                    <span class="h2 font-weight-bold mb-0">{{ hnx_index|default:"N/A" }}</span>
+                                    <span class="h2 font-weight-bold mb-0">{{ hnx_index|format_price }}</span>
                                 </div>
                                 <div class="col-auto">
                                     <div class="icon icon-shape bg-danger text-white rounded-circle shadow">
@@ -31,7 +33,7 @@
                             <div class="row">
                                 <div class="col">
                                     <h5 class="card-title text-uppercase text-muted mb-0">UPCOM Index</h5>
-                                    <span class="h2 font-weight-bold mb-0">{{ upcom_index|default:"N/A" }}</span>
+                                    <span class="h2 font-weight-bold mb-0">{{ upcom_index|format_price }}</span>
                                 </div>
                                 <div class="col-auto">
                                     <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
@@ -48,53 +50,27 @@
 </div>
 
 <div class="container-fluid mt--7">
+    <div class="row mb-3">
+        <div class="col">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary active" id="btnVND">VND</button>
+                <button type="button" class="btn btn-primary" id="btnUSD">USD</button>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xl-8 mb-5 mb-xl-0">
             <div class="card">
                 <div class="card-header border-0">
                     <div class="row align-items-center">
                         <div class="col">
-                            <h3 class="mb-0">Quick Links</h3>
+                            <h3 class="mb-0">Biểu đồ chỉ số</h3>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="card card-lift--hover shadow border-0 mb-4">
-                                <a href="{% url 'stock_analysis:stock_dashboard' %}" class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <div class="icon icon-shape bg-primary text-white rounded-circle shadow">
-                                                <i class="fas fa-chart-area"></i>
-                                            </div>
-                                        </div>
-                                        <div class="col ml--2">
-                                            <h4 class="mb-0">Market Overview</h4>
-                                            <p class="text-sm text-muted mb-0">View market indices and trends</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="card card-lift--hover shadow border-0 mb-4">
-                                <a href="{% url 'stock_analysis:stock_list' %}" class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <div class="icon icon-shape bg-success text-white rounded-circle shadow">
-                                                <i class="fas fa-list"></i>
-                                            </div>
-                                        </div>
-                                        <div class="col ml--2">
-                                            <h4 class="mb-0">Stock List</h4>
-                                            <p class="text-sm text-muted mb-0">Browse all available stocks</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Thêm canvas cho biểu đồ -->
+                    <canvas id="indexChart" height="350"></canvas>
                 </div>
             </div>
         </div>
@@ -103,7 +79,7 @@
                 <div class="card-header border-0">
                     <div class="row align-items-center">
                         <div class="col">
-                            <h3 class="mb-0">System Status</h3>
+                            <h3 class="mb-0">Trạng thái hệ thống</h3>
                         </div>
                     </div>
                 </div>
@@ -111,11 +87,11 @@
                     <div class="text-center">
                         <h4 class="text-success mb-4">
                             <i class="fas fa-check-circle mr-2"></i>
-                            System is running normally
+                            Hệ thống đang hoạt động bình thường
                         </h4>
                         <p class="text-muted">
-                            Last data update: 
-                            <span id="last-update">{{ last_update|default:"Not available" }}</span>
+                            Cập nhật lần cuối: 
+                            <span id="last-update">{{ last_update|date:"d/m/Y H:i" }}</span>
                         </p>
                     </div>
                 </div>
@@ -127,7 +103,113 @@
 
 {% block javascripts %}
 {{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Thêm các script cần thiết ở đây
+document.addEventListener('DOMContentLoaded', function() {
+    const USD_RATE = 23000; // Tỷ giá USD/VND
+    let currentCurrency = 'VND';
+    
+    // Hàm format số thành định dạng tiền tệ
+    function formatCurrency(value, currency) {
+        if (currency === 'USD') {
+            value = value / USD_RATE;
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(value);
+        } else {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(value);
+        }
+    }
+
+    // Hàm cập nhật giá trị hiển thị
+    function updateDisplayValues(currency) {
+        const prices = document.querySelectorAll('.price-value');
+        prices.forEach(price => {
+            const valueInVND = parseFloat(price.dataset.value);
+            price.textContent = formatCurrency(valueInVND, currency);
+        });
+
+        // Cập nhật biểu đồ
+        if (window.chart) {
+            const newData = window.chart.data.datasets[0].originalData.map(value => 
+                currency === 'USD' ? value / USD_RATE : value
+            );
+            window.chart.data.datasets[0].data = newData;
+            window.chart.options.scales.y.ticks.callback = function(value) {
+                return formatCurrency(value * (currency === 'USD' ? USD_RATE : 1), currency);
+            };
+            window.chart.update();
+        }
+    }
+
+    // Xử lý sự kiện click nút chuyển đổi tiền tệ
+    document.getElementById('btnVND').addEventListener('click', function() {
+        if (currentCurrency !== 'VND') {
+            currentCurrency = 'VND';
+            this.classList.add('active');
+            document.getElementById('btnUSD').classList.remove('active');
+            updateDisplayValues('VND');
+        }
+    });
+
+    document.getElementById('btnUSD').addEventListener('click', function() {
+        if (currentCurrency !== 'USD') {
+            currentCurrency = 'USD';
+            this.classList.add('active');
+            document.getElementById('btnVND').classList.remove('active');
+            updateDisplayValues('USD');
+        }
+    });
+
+    // Khởi tạo biểu đồ
+    var ctx = document.getElementById('indexChart').getContext('2d');
+    window.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'],
+            datasets: [{
+                label: 'Giá trị giao dịch',
+                data: [5000000, 20000000, 10000000, 30000000, 15000000, 40000000, 20000000, 60000000],
+                originalData: [5000000, 20000000, 10000000, 30000000, 15000000, 40000000, 20000000, 60000000],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Biến động giá trị giao dịch'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return formatCurrency(context.raw * (currentCurrency === 'USD' ? USD_RATE : 1), currentCurrency);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatCurrency(value * (currentCurrency === 'USD' ? USD_RATE : 1), currentCurrency);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
 </script>
 {% endblock javascripts %}
