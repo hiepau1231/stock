@@ -19,5 +19,8 @@ tzdata==2024.2
 Unipath==1.1
 Werkzeug==3.0.4
 whitenoise==5.3.0
-requests==2.31.0
-beautifulsoup4==4.12.2
+requests==2.26.0
+beautifulsoup4==4.10.0
+selenium==3.141.0
+django-crispy-forms==1.12.0
+plotly==5.3.1

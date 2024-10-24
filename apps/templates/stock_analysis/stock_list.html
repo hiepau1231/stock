@@ -7,18 +7,26 @@
   <div class="row">
     <div class="col">
       <div class="card">
-        <div class="card-header border-0">
-          <h3 class="mb-0">Stock List</h3>
+        <div class="card-header">
+          <h3 class="mb-0">Danh sách cổ phiếu</h3>
+          <form class="mt-3" method="get">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Tìm kiếm cổ phiếu" name="q">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+              </div>
+            </div>
+          </form>
+          <a href="{% url 'stock_analysis:export_stock_data' %}" class="btn btn-success">Xuất dữ liệu CSV</a>
         </div>
         <div class="table-responsive">
           <table class="table align-items-center table-flush">
             <thead class="thead-light">
               <tr>
-                <th scope="col">Symbol</th>
-                <th scope="col">Name</th>
-                <th scope="col">Latest Price</th>
-                <th scope="col">Change</th>
-                <th scope="col">Actions</th>
+                <th scope="col">Mã cổ phiếu</th>
+                <th scope="col">Tên công ty</th>
+                <th scope="col">Ngành</th>
+                <th scope="col">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -26,31 +34,67 @@
               <tr>
                 <td>{{ stock.symbol }}</td>
                 <td>{{ stock.name }}</td>
-                <td>{{ stock.prices.first.close_price|default:"N/A" }}</td>
+                <td>{{ stock.sector }}</td>
                 <td>
-                  {% with latest_price=stock.prices.first.close_price previous_price=stock.prices.last.close_price %}
-                    {% if latest_price and previous_price %}
-                      {% with change=latest_price|add:"-"|add:previous_price %}
-                        {% if change > 0 %}
-                          <span class="text-success">+{{ change|floatformat:2 }}</span>
-                        {% elif change < 0 %}
-                          <span class="text-danger">{{ change|floatformat:2 }}</span>
-                        {% else %}
-                          0.00
-                        {% endif %}
-                      {% endwith %}
-                    {% else %}
-                      N/A
-                    {% endif %}
-                  {% endwith %}
+                  <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}" class="btn btn-sm btn-primary">Chi tiết</a>
                 </td>
-                <td>
-                  <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}" class="btn btn-sm btn-primary">View Details</a>
-                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4">Không tìm thấy cổ phiếu nào.</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
+        </div>
+        <div class="card-footer py-4">
+          <nav aria-label="...">
+            <ul class="pagination justify-content-end mb-0">
+              {% if stocks.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ stocks.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    <i class="fas fa-angle-left"></i>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" tabindex="-1">
+                    <i class="fas fa-angle-left"></i>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                </li>
+              {% endif %}
+              
+              {% for i in stocks.paginator.page_range %}
+                {% if stocks.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }} <span class="sr-only">(current)</span></a>
+                  </li>
+                {% else %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              
+              {% if stocks.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ stocks.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    <i class="fas fa-angle-right"></i>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" tabindex="-1">
+                    <i class="fas fa-angle-right"></i>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
         </div>
       </div>
     </div>

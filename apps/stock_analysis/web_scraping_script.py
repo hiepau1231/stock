@@ -1,4 +1,5 @@
 import requests  # Thêm dòng này vào đầu file
+from requests.exceptions import RequestException  # Thêm dòng này
 
 from selenium import webdriver
 
@@ -23,10 +24,12 @@ from io import StringIO
 
 from datetime import datetime
 
-from .models import Stock, StockPrice
+from .models import Stock, StockPrice, StockIndex
 
 import logging
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from django.utils import timezone
+from time import sleep
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -154,86 +157,57 @@ def scrape_stock_data(symbol):
 
 
 def scrape_index_data():
-    """Scrape data for HNX and UPCOM indices"""
+    """Fetch data for VN-Index, HNX-Index, and UPCOM-Index"""
     try:
-        # URL cho trang chính của CafeF
-        url = "https://s.cafef.vn/bao-cao-vi-mo-thi-truong.chn"
-        
-        logger.info(f"Sending request to {url}")
-        soup = get_soup(url)
-        
-        indices_data = {
-            'HNXINDEX': {'name': 'HNX Index', 'selector': '#HNX-Index .box-price span'},
-            'UPCOM': {'name': 'UPCOM Index', 'selector': '#UPCOM-Index .box-price span'}
-        }
+        data = get_index_data()
+        if not data or 'data' not in data:
+            logger.warning("No index data received from API")
+            return False
         
         success = False
-        for index_code, data in indices_data.items():
+        for index in data['data']:
             try:
-                # Tìm phần tử chứa giá
-                price_element = soup.select_one(data['selector'])
-                if price_element:
-                    price_text = price_element.text.strip()
-                    # Chuyển đổi chuỗi giá thành số
-                    price = float(price_text.replace(',', ''))
-                    
-                    # Tìm phần tử chứa thay đổi giá
-                    change_element = soup.select_one(f"{data['selector']}:nth-child(2)")
-                    change = 0
-                    if change_element:
-                        change_text = change_element.text.strip()
-                        try:
-                            change = float(change_text.replace('+', '').replace(',', ''))
-                        except ValueError:
-                            logger.warning(f"Could not parse change value for {index_code}")
-                    
-                    stock, created = Stock.objects.get_or_create(
-                        symbol=index_code,
-                        defaults={'name': data['name']}
-                    )
-                    
-                    # Tạo bản ghi giá mới
-                    StockPrice.objects.create(
-                        stock=stock,
-                        date=datetime.now().date(),
-                        open_price=price - change,
-                        close_price=price,
-                        high_price=max(price, price - change),
-                        low_price=min(price, price - change),
-                        volume=0
-                    )
-                    
-                    logger.info(f"Successfully saved data for {index_code}: Price={price}, Change={change}")
-                    success = True
-                else:
-                    logger.warning(f"Price element not found for {index_code}")
+                name = index['code']
+                price = float(index['price'])
+                change = float(index['change'])
+                
+                stock_index, created = StockIndex.objects.update_or_create(
+                    name=name,
+                    defaults={
+                        'value': price,
+                        'change': change,
+                        'last_updated': timezone.now()
+                    }
+                )
+                
+                logger.info(f"Successfully saved data for {name}: Price={price}, Change={change}")
+                success = True
             except Exception as e:
-                logger.error(f"Error processing {index_code}: {str(e)}")
+                logger.error(f"Error processing index {name}: {str(e)}")
                 continue
+        
+        if not success:
+            logger.warning("No index data was successfully processed")
         
         return success
     
     except Exception as e:
-        logger.error(f"Error in scrape_index_data: {str(e)}")
+        logger.error(f"Unexpected error in scrape_index_data: {str(e)}")
         return False
 
-def get_soup(url, retries=3, delay=1):
-    """Get BeautifulSoup object with retry logic"""
+def get_index_data():
+    url = "https://finfo-api.vndirect.com.vn/v4/change_prices?q=code:VNINDEX,HNX,UPCOM"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
     
-    for attempt in range(retries):
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            return BeautifulSoup(response.text, 'html.parser')
-        except RequestException as e:
-            logger.warning(f"Attempt {attempt + 1} failed: {str(e)}")
-            if attempt < retries - 1:
-                time.sleep(delay)
-            else:
-                raise
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except RequestException as e:
+        logger.error(f"Error fetching index data: {str(e)}")
+        return None
 
 def scrape_stock_data(symbol):
     """Scrape data for individual stocks"""
@@ -281,3 +255,50 @@ def scrape_stock_data(symbol):
     except Exception as e:
         logger.error(f"Error scraping stock {symbol}: {str(e)}")
         return False
+
+def scrape_stock_data():
+    url = "https://finance.vietstock.vn/"  # Cập nhật URL chính xác
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    
+    max_retries = 3
+    retry_delay = 5  # seconds
+
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Tìm và trích xuất dữ liệu cho VN-Index
+            vn_index = soup.find('div', {'id': 'price-box-1'})
+            if vn_index:
+                vn_index_value = vn_index.find('span', class_='price').text.strip()
+                vn_index_change = vn_index.find('span', class_='change').text.strip()
+                
+                # Cập nhật hoặc tạo mới đối tượng StockIndex
+                stock_index, created = StockIndex.objects.update_or_create(
+                    name="VN-Index",
+                    defaults={
+                        'value': float(vn_index_value.replace(',', '')),
+                        'change': float(vn_index_change.replace(',', '')),
+                        'last_updated': timezone.now()
+                    }
+                )
+                logger.info(f"{'Created' if created else 'Updated'} VN-Index: {vn_index_value}")
+
+            # Tương tự cho HNX-Index và UPCOM-Index
+            # ...
+
+            return True  # Scraping thành công
+        except RequestException as e:
+            logger.error(f"Request failed on attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+            else:
+                logger.error("Max retries reached. Scraping failed.")
+                return False
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {str(e)}")
+            return False

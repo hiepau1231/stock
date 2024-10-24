@@ -1,55 +1,54 @@
 # Nhiệm Vụ Hiện Tại
 
 ## Mục Tiêu
-Hoàn thiện chức năng web scraping và cải thiện hiển thị dữ liệu chỉ số thị trường.
+Tiếp tục cải thiện chức năng và hiệu suất của ứng dụng phân tích chứng khoán, tập trung vào việc sửa lỗi hiển thị và cải thiện trải nghiệm người dùng.
 
 ## Bối Cảnh
-Chúng ta đã tích hợp thành công template Argon Dashboard Django và thiết lập cơ sở dữ liệu SQLite. Script web scraping đã được tạo nhưng đang gặp vấn đề với việc lấy dữ liệu từ trang web nguồn.
+Chúng ta đã thành công trong việc hiển thị chỉ số thị trường trên dashboard, nhưng vẫn còn nhiều lỗi hiển thị cần được khắc phục.
 
 ## Các Nhiệm Vụ Đã Hoàn Thành
-✅ Thiết lập cấu trúc dự án ban đầu
-✅ Cấu hình các thiết lập Django cho dự án
-✅ Tích hợp template Argon Dashboard Django
-✅ Thiết lập hệ thống xác thực
-✅ Sửa các vấn đề về định tuyến URL
-✅ Đăng nhập thành công với tài khoản superuser
-✅ Tạo script web scraping ban đầu
-✅ Tích hợp chức năng cập nhật dữ liệu vào giao diện người dùng
-✅ Thêm template filters cho tính toán thay đổi giá
-✅ Cải thiện xử lý lỗi và logging trong quá trình web scraping
+✅ Cải thiện chức năng web scraping
+✅ Hiển thị dữ liệu chỉ số HNX và UPCOM trên dashboard
+✅ Thêm biểu đồ cho dữ liệu lịch sử chỉ số
+✅ Cải thiện giao diện hiển thị thông báo lỗi/thành công
+✅ Thêm chức năng tìm kiếm cổ phiếu
+✅ Thêm phân trang cho danh sách cổ phiếu
+✅ Thêm chức năng xuất dữ liệu cổ phiếu ra file CSV
+✅ Cải thiện hiệu suất bằng cách sử dụng caching
 
 ## Các Bước Tiếp Theo
-1. Sửa lỗi web scraping:
-   - Xác định đúng URL và cấu trúc HTML của trang web nguồn
-   - Cập nhật script để phù hợp với cấu trúc mới
-   - Thêm xử lý lỗi và retry logic
-   - Kiểm tra và đảm bảo dữ liệu được lưu vào database
+1. Sửa lỗi hiển thị:
+   - Kiểm tra và sửa lỗi hiển thị trên dashboard
+   - Đảm bảo tất cả các chỉ số được hiển thị chính xác
+   - Cải thiện giao diện biểu đồ
 
-2. Cải thiện hiển thị dữ liệu:
-   - Hiển thị dữ liệu chỉ số HNX và UPCOM trên dashboard
-   - Thêm biểu đồ cho dữ liệu lịch sử
-   - Cải thiện giao diện hiển thị thông báo lỗi/thành công
+2. Cải thiện trải nghiệm người dùng:
+   - Thêm thông báo loading khi đang cập nhật dữ liệu
+   - Cải thiện giao diện mobile
 
 3. Tối ưu hóa hiệu suất:
-   - Thêm caching cho dữ liệu chỉ số
    - Tối ưu hóa truy vấn database
    - Cải thiện thời gian phản hồi của web scraping
 
-4. Kiểm thử:
-   - Viết unit tests cho web scraping
-   - Kiểm thử tích hợp cho toàn bộ quy trình
+4. Thêm tính năng mới:
+   - Chức năng so sánh cổ phiếu
+   - Tạo danh mục đầu tư cá nhân
+   - Thông báo biến động giá
 
-## Thách Thức Hiện Tại
-- Xác định đúng cấu trúc HTML của trang web nguồn
-- Đảm bảo web scraping hoạt động ổn định
-- Xử lý các trường hợp lỗi khi không lấy được dữ liệu
+5. Kiểm thử:
+   - Viết unit tests cho các chức năng mới
+   - Thực hiện kiểm thử tích hợp
+
+6. Tài liệu hóa:
+   - Cập nhật tài liệu API (nếu có)
+   - Cập nhật hướng dẫn sử dụng cho người dùng
 
 ## Ưu Tiên
-1. Sửa lỗi web scraping để lấy được dữ liệu chỉ số
-2. Cải thiện hiển thị dữ liệu trên dashboard
-3. Thêm các tính năng phân tích cơ bản
+1. Sửa lỗi hiển thị
+2. Cải thiện trải nghiệm người dùng
+3. Tối ưu hóa hiệu suất
 
 ## Lưu Ý
-- Kiểm tra log để debug web scraping
-- Đảm bảo xử lý lỗi đầy đủ
-- Cập nhật tài liệu khi có thay đổi
+- Đảm bảo tương thích với các trình duyệt phổ biến
+- Tuân thủ các quy tắc bảo mật khi xử lý dữ liệu người dùng
+- Cập nhật requirements.txt khi thêm thư viện mới

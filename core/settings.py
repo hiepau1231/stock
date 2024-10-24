@@ -558,6 +558,22 @@ INSTALLED_APPS = [
 
 
 
+    'crispy_forms',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ]
 
 
@@ -1998,6 +2014,8 @@ STATICFILES_DIRS = (
 
 
 
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
@@ -2029,3 +2047,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}

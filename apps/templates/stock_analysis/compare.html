@@ -1,0 +1,65 @@
+{% extends "layouts/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %} So sánh cổ phiếu {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="mb-0">So sánh cổ phiếu</h3>
+        </div>
+        <div class="card-body">
+          <form method="get">
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">So sánh</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {% if stocks %}
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="mb-0">Kết quả so sánh</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Chỉ số</th>
+                  {% for stock in stocks %}
+                  <th>{{ stock.symbol }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Giá hiện tại</td>
+                  {% for stock in stocks %}
+                  <td>{{ stock.latest_price.close_price }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Thay đổi (%)</td>
+                  {% for stock in stocks %}
+                  <td>{{ stock.price_change_percent }}%</td>
+                  {% endfor %}
+                </tr>
+                <!-- Thêm các chỉ số khác tương tự -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock content %}
