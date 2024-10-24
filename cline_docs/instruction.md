@@ -228,30 +228,18 @@ stock_analysis_project/
 │ ├── urls.py
 │ └── wsgi.py
 ├── apps/
-│ ├── authentication/
-│ │ ├── init.py
-│ │ ├── models.py
-│ │ ├── views.py
-│ │ ├── urls.py
-│ │ └── forms.py
-│ ├── home/
-│ │ ├── init.py
-│ │ ├── views.py
-│ │ └── urls.py
 │ └── stock_analysis/
 │ ├── init.py
 │ ├── admin.py
 │ ├── models.py
 │ ├── views.py
 │ ├── urls.py
-│ ├── web_scraping_script.py
-│ ├── templatetags/
+│ ├── services/
 │ │ ├── init.py
-│ │ └── stock_filters.py
-│ └── management/
-│ └── commands/
-│ ├── create_sample_data.py
-│ └── scrape_stock_data.py
+│ │ └── stock_service.py
+│ └── templatetags/
+│ ├── init.py
+│ └── stock_filters.py
 ├── templates/
 │ ├── base.html
 │ ├── includes/
@@ -259,7 +247,11 @@ stock_analysis_project/
 │ └── stock_analysis/
 │ ├── dashboard.html
 │ ├── stock_list.html
-│ └── stock_detail.html
+│ ├── stock_detail.html
+│ ├── portfolio_list.html
+│ ├── portfolio_detail.html
+│ ├── portfolio_create.html
+│ └── watchlist.html
 ├── static/
 │ ├── css/
 │ ├── js/
@@ -273,22 +265,20 @@ stock_analysis_project/
 
 ✅ Hoàn thành: Cấu trúc dự án đã được thiết lập theo đề xuất.
 
-- `manage.py`: Django's command-line utility for administrative tasks.
-- `core/`: Core Django project settings and configurations.
-  - `settings.py`: Configuration settings for the Django project.
-  - `urls.py`: URL declarations for the project.
-  - `wsgi.py`: WSGI configuration for deploying the project.
-- `apps/`: Contains all Django apps modularizing different functionalities.
-  - `authentication/`: Handles user authentication, including models, views, and URLs.
-  - `home/`: Manages the home page and related views.
-  - `stock_analysis/`: Manages stock data models, views, URLs, and includes web scraping functionality.
-    - `templatetags/`: Custom template tags for stock analysis.
-    - `management/commands/`: Custom management commands for data creation and scraping.
-- `templates/`: Contains HTML templates used by Django.
-  - `base.html`: The base template inherited by other templates.
-  - `includes/`: Reusable template components.
-  - `stock_analysis/`: Templates specific to stock analysis features.
-- `static/`: Hosts static assets like CSS, JavaScript, and images.
-- `cline_docs/`: Documentation files for the project.
-- `requirements.txt`: Lists Python dependencies for the Django backend.
-- `README.md`: Project overview and setup instructions.
+### Key Files and Their Purposes
+- `manage.py`: Django's command-line utility for administrative tasks
+- `core/`: Core project settings and configurations
+- `apps/stock_analysis/`: Main application directory
+  - `models.py`: Database models for stocks, portfolios, etc.
+  - `views.py`: View logic for handling requests
+  - `urls.py`: URL routing configurations
+  - `services/stock_service.py`: Service layer for interacting with vnstock API
+  - `templatetags/`: Custom template filters
+- `templates/`: HTML templates
+  - `base.html`: Base template with common layout
+  - `stock_analysis/`: Application-specific templates
+- `static/`: Static files (CSS, JavaScript, images)
+- `cline_docs/`: Project documentation
+- `requirements.txt`: Python package dependencies
+
+[Rest of the document remains unchanged...]

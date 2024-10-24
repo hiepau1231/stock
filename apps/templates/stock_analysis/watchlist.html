@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Danh sách theo dõi {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="text-primary mb-0">Danh sách cổ phiếu theo dõi</h6>
+                </div>
+                <div class="card-body">
+                    {% if watchlist_stocks %}
+                        <div class="table-responsive">
+                            <table class="table align-items-center table-flush">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Mã CP</th>
+                                        <th>Tên công ty</th>
+                                        <th>Giá hiện tại</th>
+                                        <th>Thay đổi</th>
+                                        <th>Khối lượng</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stock in watchlist_stocks %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'stock_analysis:stock_detail' symbol=stock.symbol %}" class="text-primary font-weight-bold">
+                                                {{ stock.symbol }}
+                                            </a>
+                                        </td>
+                                        <td>{{ stock.company_name }}</td>
+                                        <td>{{ stock.current_price|default:"-" }}</td>
+                                        <td class="{% if stock.price_change > 0 %}text-success{% elif stock.price_change < 0 %}text-danger{% endif %}">
+                                            {{ stock.price_change|default:"-" }}%
+                                        </td>
+                                        <td>{{ stock.volume|default:"-" }}</td>
+                                        <td>
+                                            <a href="{% url 'stock_analysis:remove_from_watchlist' symbol=stock.symbol %}" 
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa khỏi danh sách theo dõi?')">
+                                                Xóa
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p>Bạn chưa có cổ phiếu nào trong danh sách theo dõi</p>
+                            <a href="{% url 'stock_analysis:stock_list' %}" class="btn btn-primary">
+                                Thêm cổ phiếu
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

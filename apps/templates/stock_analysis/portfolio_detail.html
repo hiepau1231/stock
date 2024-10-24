@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Chi tiết danh mục {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="text-primary mb-0">{{ portfolio.name }}</h6>
+                        </div>
+                        <div class="col text-right">
+                            <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addStockModal">
+                                Thêm cổ phiếu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if portfolio.portfolioitem_set.exists %}
+                        <div class="table-responsive">
+                            <table class="table align-items-center table-flush">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Mã CP</th>
+                                        <th>Số lượng</th>
+                                        <th>Giá mua</th>
+                                        <th>Giá hiện tại</th>
+                                        <th>Lãi/Lỗ</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in portfolio.portfolioitem_set.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'stock_analysis:stock_detail' symbol=item.stock.symbol %}" class="text-primary font-weight-bold">
+                                                {{ item.stock.symbol }}
+                                            </a>
+                                        </td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>{{ item.purchase_price|floatformat:0 }}</td>
+                                        <td>{{ item.current_price|default:"-"|floatformat:0 }}</td>
+                                        <td class="{% if item.profit_loss > 0 %}text-success{% elif item.profit_loss < 0 %}text-danger{% endif %}">
+                                            {{ item.profit_loss|default:"-"|floatformat:0 }}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'stock_analysis:remove_portfolio_stock' pk=portfolio.id stock_id=item.stock.id %}" 
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa cổ phiếu này?')">
+                                                Xóa
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p>Chưa có cổ phiếu nào trong danh mục</p>
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addStockModal">
+                                Thêm cổ phiếu
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm cổ phiếu -->
+<div class="modal fade" id="addStockModal" tabindex="-1" role="dialog" aria-labelledby="addStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="{% url 'stock_analysis:add_portfolio_stock' pk=portfolio.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStockModalLabel">Thêm cổ phiếu</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="symbol">Mã cổ phiếu</label>
+                        <input type="text" class="form-control" id="symbol" name="symbol" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">Số lượng</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_price">Giá mua</label>
+                        <input type="number" class="form-control" id="purchase_price" name="purchase_price" required min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_date">Ngày mua</label>
+                        <input type="date" class="form-control" id="purchase_date" name="purchase_date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

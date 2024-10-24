@@ -1,103 +1,92 @@
-{% extends "layouts/base.html" %}
+{% extends "base.html" %}
+{% load static %}
 
-{% block title %} Stock List {% endblock %}
+{% block title %}Danh sách cổ phiếu{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt--6">
-  <div class="row">
-    <div class="col">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="mb-0">Danh sách cổ phiếu</h3>
-          <form class="mt-3" method="get">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Tìm kiếm cổ phiếu" name="q">
-              <div class="input-group-append">
-                <button class="btn btn-primary" type="submit">Tìm kiếm</button>
-              </div>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="text-primary mb-0">Danh sách cổ phiếu</h6>
+                        </div>
+                        <div class="col text-right">
+                            <div class="input-group">
+                                <input type="text" id="stockSearch" class="form-control" placeholder="Tìm kiếm mã cổ phiếu...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% if stocks %}
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush" id="stockTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Mã CP</th>
+                                    <th>Tên công ty</th>
+                                    <th>Sàn</th>
+                                    <th>Ngành</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in stocks %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'stock_analysis:stock_detail' symbol=stock.ticker %}" class="text-primary font-weight-bold">
+                                            {{ stock.ticker }}
+                                        </a>
+                                    </td>
+                                    <td>{{ stock.companyName }}</td>
+                                    <td>{{ stock.exchange }}</td>
+                                    <td>{{ stock.industryName }}</td>
+                                    <td>
+                                        <a href="{% url 'stock_analysis:add_to_watchlist' symbol=stock.ticker %}" class="btn btn-sm btn-primary">
+                                            Thêm vào theo dõi
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>Không có dữ liệu cổ phiếu hoặc có lỗi khi tải dữ liệu.</p>
+                    {% endif %}
+                </div>
             </div>
-          </form>
-          <a href="{% url 'stock_analysis:export_stock_data' %}" class="btn btn-success">Xuất dữ liệu CSV</a>
         </div>
-        <div class="table-responsive">
-          <table class="table align-items-center table-flush">
-            <thead class="thead-light">
-              <tr>
-                <th scope="col">Mã cổ phiếu</th>
-                <th scope="col">Tên công ty</th>
-                <th scope="col">Ngành</th>
-                <th scope="col">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for stock in stocks %}
-              <tr>
-                <td>{{ stock.symbol }}</td>
-                <td>{{ stock.name }}</td>
-                <td>{{ stock.sector }}</td>
-                <td>
-                  <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}" class="btn btn-sm btn-primary">Chi tiết</a>
-                </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="4">Không tìm thấy cổ phiếu nào.</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="card-footer py-4">
-          <nav aria-label="...">
-            <ul class="pagination justify-content-end mb-0">
-              {% if stocks.has_previous %}
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ stocks.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
-                    <i class="fas fa-angle-left"></i>
-                    <span class="sr-only">Previous</span>
-                  </a>
-                </li>
-              {% else %}
-                <li class="page-item disabled">
-                  <a class="page-link" href="#" tabindex="-1">
-                    <i class="fas fa-angle-left"></i>
-                    <span class="sr-only">Previous</span>
-                  </a>
-                </li>
-              {% endif %}
-              
-              {% for i in stocks.paginator.page_range %}
-                {% if stocks.number == i %}
-                  <li class="page-item active">
-                    <a class="page-link" href="#">{{ i }} <span class="sr-only">(current)</span></a>
-                  </li>
-                {% else %}
-                  <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
-                  </li>
-                {% endif %}
-              {% endfor %}
-              
-              {% if stocks.has_next %}
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ stocks.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
-                    <i class="fas fa-angle-right"></i>
-                    <span class="sr-only">Next</span>
-                  </a>
-                </li>
-              {% else %}
-                <li class="page-item disabled">
-                  <a class="page-link" href="#" tabindex="-1">
-                    <i class="fas fa-angle-right"></i>
-                    <span class="sr-only">Next</span>
-                  </a>
-                </li>
-              {% endif %}
-            </ul>
-          </nav>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock content %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('stockSearch');
+    const stockTable = document.getElementById('stockTable');
+    const rows = stockTable.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const symbol = row.cells[0].textContent.toLowerCase();
+            const name = row.cells[1].textContent.toLowerCase();
+            
+            if (symbol.includes(searchText) || name.includes(searchText)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+</script>
+{% endblock javascripts %}
