@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Stock Market Dashboard</h1>
+    
+    <div class="market-overview">
+        <h2>Market Overview</h2>
+        {{ market_overview|safe }}
+    </div>
+    
+    <div class="stock-list">
+        <h2>Stock List</h2>
+        {{ stock_list|safe }}
+    </div>
+</div>
+{% endblock %}

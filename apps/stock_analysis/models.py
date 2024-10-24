@@ -42,7 +42,7 @@ class Stock(models.Model):
 
     company_name = models.CharField(max_length=255, default='')  # Thêm default=''
 
-    exchange = models.CharField(max_length=10)
+    exchange = models.CharField(max_length=50, default='HOSE')  # Thêm default='HOSE' hoặc giá trị phù hợp khác
 
     industry = models.CharField(max_length=255, null=True, blank=True)
 
