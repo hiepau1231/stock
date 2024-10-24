@@ -510,6 +510,22 @@ INSTALLED_APPS = [
 
 
 
+    'django.contrib.humanize',  # Thêm dòng này
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     'apps.home',            # Enable the inner home (home)
 
 
