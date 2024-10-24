@@ -223,44 +223,73 @@ Here's the project structure:
 stock_analysis_project/
 ├── manage.py
 ├── core/
-│ ├── init.py
-│ ├── settings.py
-│ ├── urls.py
-│ └── wsgi.py
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
 ├── apps/
-│ └── stock_analysis/
-│ ├── init.py
-│ ├── admin.py
-│ ├── models.py
-│ ├── views.py
-│ ├── urls.py
-│ ├── services/
-│ │ ├── init.py
-│ │ └── stock_service.py
-│ └── templatetags/
-│ ├── init.py
-│ └── stock_filters.py
+│   └── stock_analysis/
+│       ├── __init__.py
+│       ├── admin.py
+│       ├── models.py
+│       ├── views.py
+│       ├── urls.py
+│       ├── forms.py
+│       ├── services/
+│       │   ├── __init__.py
+│       │   └── stock_service.py
+│       └── templatetags/
+│           ├── __init__.py
+│           └── stock_filters.py
 ├── templates/
-│ ├── base.html
-│ ├── includes/
-│ │ └── sidenav.html
-│ └── stock_analysis/
-│ ├── dashboard.html
-│ ├── stock_list.html
-│ ├── stock_detail.html
-│ ├── portfolio_list.html
-│ ├── portfolio_detail.html
-│ ├── portfolio_create.html
-│ └── watchlist.html
+│   ├── base.html
+│   ├── includes/
+│   │   └── sidenav.html
+│   ├── home/
+│   │   ├── index.html
+│   │   └── tables.html
+│   └── stock_analysis/
+│       ├── dashboard.html
+│       ├── stock_list.html
+│       ├── stock_detail.html
+│       ├── portfolio_list.html
+│       ├── portfolio_detail.html
+│       ├── portfolio_create.html
+│       ├── watchlist.html
+│       └── update_data.html
 ├── static/
-│ ├── css/
-│ ├── js/
-│ └── assets/
+│   ├── css/
+│   │   ├── bootstrap/
+│   │   │   └── bootstrap.css
+│   │   └── argon.css
+│   ├── js/
+│   ├── assets/
+│   │   ├── scss/
+│   │   │   └── core/
+│   │   │       ├── free/
+│   │   │       │   └── list-groups/
+│   │   │       │       └── _list-group.scss
+│   │   │       ├── list-groups/
+│   │   │       │   └── _list-check.scss
+│   │   │       └── tables/
+│   │   │           └── _table-sortable.scss
+│   │   └── vendor/
+│   │       ├── bootstrap-datetimepicker.js
+│   │       ├── font-awesome/
+│   │       │   └── HELP-US-OUT.txt
+│   │       ├── jekyll/
+│   │       │   └── Rakefile
+│   │       ├── lavalamp/
+│   │       │   └── lavalamp.jquery.json
+│   │       └── prismjs/
+│   │           └── components.json
+│   └── sitemap.xml
 ├── cline_docs/
-│ ├── instruction.md
-│ └── currentTask.md
+│   ├── instruction.md
+│   └── currentTask.md
 ├── requirements.txt
-└── README.md
+├── README.md
+└── package.json
 
 
 ✅ Hoàn thành: Cấu trúc dự án đã được thiết lập theo đề xuất.
