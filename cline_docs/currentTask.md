@@ -1,54 +1,48 @@
 # Nhiệm Vụ Hiện Tại
 
 ## Mục Tiêu
-Tiếp tục cải thiện chức năng và hiệu suất của ứng dụng phân tích chứng khoán, tập trung vào việc sửa lỗi hiển thị và cải thiện trải nghiệm người dùng.
+Tiếp tục cải thiện chức năng và hiệu suất của ứng dụng phân tích chứng khoán, tập trung vào việc hoàn thiện chức năng web scraping và cải thiện trải nghiệm người dùng.
 
 ## Bối Cảnh
-Chúng ta đã thành công trong việc hiển thị chỉ số thị trường trên dashboard, nhưng vẫn còn nhiều lỗi hiển thị cần được khắc phục.
+Chúng ta đã hoàn thành việc sửa lỗi cơ bản trong cấu trúc project và các file chính. Bây giờ cần tập trung vào việc hoàn thiện chức năng web scraping và cải thiện giao diện người dùng.
 
 ## Các Nhiệm Vụ Đã Hoàn Thành
-✅ Cải thiện chức năng web scraping
-✅ Hiển thị dữ liệu chỉ số HNX và UPCOM trên dashboard
-✅ Thêm biểu đồ cho dữ liệu lịch sử chỉ số
-✅ Cải thiện giao diện hiển thị thông báo lỗi/thành công
-✅ Thêm chức năng tìm kiếm cổ phiếu
-✅ Thêm phân trang cho danh sách cổ phiếu
-✅ Thêm chức năng xuất dữ liệu cổ phiếu ra file CSV
-✅ Cải thiện hiệu suất bằng cách sử dụng caching
+✅ Cải thiện cấu trúc project
+✅ Sửa lỗi hiển thị và import trong các file chính
+✅ Loại bỏ khoảng trống không cần thiết trong code
+✅ Thêm đầy đủ các hàm view cần thiết
+✅ Cập nhật models với đầy đủ các trường dữ liệu
+✅ Thiết lập cơ bản cho web scraping script
 
 ## Các Bước Tiếp Theo
-1. Sửa lỗi hiển thị:
-   - Kiểm tra và sửa lỗi hiển thị trên dashboard
-   - Đảm bảo tất cả các chỉ số được hiển thị chính xác
-   - Cải thiện giao diện biểu đồ
+1. Hoàn thiện chức năng web scraping:
+   - Cập nhật đường dẫn chromedriver
+   - Thêm logic scraping cho dữ liệu chỉ số
+   - Thêm logic scraping cho dữ liệu cổ phiếu
+   - Thêm xử lý lỗi và logging chi tiết
 
-2. Cải thiện trải nghiệm người dùng:
-   - Thêm thông báo loading khi đang cập nhật dữ liệu
-   - Cải thiện giao diện mobile
+2. Cải thiện giao diện người dùng:
+   - Tạo templates cho các view mới
+   - Thêm loading indicators
+   - Cải thiện responsive design
+   - Thêm thông báo lỗi/thành công
 
 3. Tối ưu hóa hiệu suất:
-   - Tối ưu hóa truy vấn database
-   - Cải thiện thời gian phản hồi của web scraping
+   - Cải thiện caching
+   - Tối ưu hóa queries
+   - Giảm thời gian load trang
 
-4. Thêm tính năng mới:
-   - Chức năng so sánh cổ phiếu
-   - Tạo danh mục đầu tư cá nhân
-   - Thông báo biến động giá
-
-5. Kiểm thử:
+4. Testing:
    - Viết unit tests cho các chức năng mới
-   - Thực hiện kiểm thử tích hợp
-
-6. Tài liệu hóa:
-   - Cập nhật tài liệu API (nếu có)
-   - Cập nhật hướng dẫn sử dụng cho người dùng
+   - Test web scraping functionality
+   - Test xử lý lỗi
 
 ## Ưu Tiên
-1. Sửa lỗi hiển thị
-2. Cải thiện trải nghiệm người dùng
-3. Tối ưu hóa hiệu suất
+1. Hoàn thiện web scraping script
+2. Tạo và cập nhật templates
+3. Testing và debugging
 
 ## Lưu Ý
-- Đảm bảo tương thích với các trình duyệt phổ biến
-- Tuân thủ các quy tắc bảo mật khi xử lý dữ liệu người dùng
-- Cập nhật requirements.txt khi thêm thư viện mới
+- Đảm bảo xử lý lỗi đầy đủ trong web scraping
+- Tối ưu hóa thời gian scraping
+- Cập nhật documentation khi thêm tính năng mới

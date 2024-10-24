@@ -1,304 +1,388 @@
-import requests  # Thêm dòng này vào đầu file
-from requests.exceptions import RequestException  # Thêm dòng này
-
+import requests
+# xóa 2 dòng này nếu không cần async
+# import asyncio
+# import nest_asyncio
+from requests.exceptions import RequestException
 from selenium import webdriver
-
 from selenium.webdriver.chrome.service import Service
-
 from selenium.webdriver.chrome.options import Options 
-
 from selenium.webdriver.common.by import By
-
 from selenium.webdriver.common.keys import Keys
-
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 from bs4 import BeautifulSoup
-
 import time
-
 import pandas as pd
-
 from io import StringIO
-
 from datetime import datetime
-
-from .models import Stock, StockPrice, StockIndex
-
+from .models import Stock, StockPrice, StockIndex, HistoricalData
 import logging
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from django.utils import timezone
 from time import sleep
 
+# Thiết lập logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-
-
-
-def scrape_stock_data(symbol):
-
-    chrome_driver_path = 'path/to/chromedriver'  # Cập nhật đường dẫn tới chromedriver
-
-
-
-    chrome_options = Options()
-
-    chrome_options.add_argument("--headless")
-
-    chrome_options.add_argument("--disable-gpu")
-
-    chrome_options.add_argument("--no-sandbox")
-
-    chrome_options.add_argument("--disable-dev-shm-usage")
-
-
-
-    service = Service(executable_path=chrome_driver_path)
-
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
-
-
+def get_chrome_driver():
+    """
+    Khởi tạo và trả về Chrome WebDriver
+    """
     try:
-
-        url = f'https://s.cafef.vn/Lich-su-giao-dich-{symbol}-1.chn'
-        driver.get(url)
-        logger.info(f"Accessing URL: {url}")
-
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "contentMainData"))
-        )
-
-        all_dataframes = []
-        page_count = 0
-        max_pages = 5  # Giới hạn số trang để tránh quá tải
-
-
-
-        while page_count < max_pages:
-
-            html = driver.page_source
-
-            soup = BeautifulSoup(html, 'html.parser')
-
-            table = soup.find('table', {'id': 'GirdTable2'})
-
-
-
-            if table:
-
-                table_html = str(table)
-
-                df = pd.read_html(StringIO(table_html))[0]
-
-                df.columns = ['Ngày', 'Giá đóng cửa', 'Thay đổi', 'Khối lượng', 'Giá mở cửa', 'Giá cao nhất', 'Giá thấp nhất']
-
-                df['Ngày'] = pd.to_datetime(df['Ngày'], format='%d/%m/%Y')
-
-                all_dataframes.append(df)
-
-                logger.info(f"Data scraped from page {page_count + 1}")
-
-
-
-                next_button = driver.find_element(By.XPATH, "//a[contains(@class, 'paging') and contains(text(), '>')]")
-                if 'disabled' in next_button.get_attribute('class'):
-                    break
-                next_button.click()
-                time.sleep(1)
-                page_count += 1
-
-            else:
-
-                logger.warning("Table not found on the page.")
-
-                break
-
-
-
-        if all_dataframes:
-
-            final_df = pd.concat(all_dataframes, ignore_index=True)
-
-            stock, created = Stock.objects.get_or_create(symbol=symbol)
-            
-            for _, row in final_df.iterrows():
-                StockPrice.objects.update_or_create(
-                    stock=stock,
-                    date=row['Ngày'],
-                    defaults={
-                        'open_price': row['Giá mở cửa'],
-                        'high_price': row['Giá cao nhất'],
-                        'low_price': row['Giá thấp nhất'],
-                        'close_price': row['Giá đóng cửa'],
-                        'volume': row['Khối lượng'],
-                    }
-                )
-            logger.info(f"Data saved for {symbol}")
-
-        else:
-
-            logger.warning(f"No data scraped for {symbol}")
-
-
-
-    except (NoSuchElementException, TimeoutException) as e:
-        logger.error(f"Error scraping data for {symbol}: {str(e)}")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        
+        # Sử dụng ChromeDriverManager để tự động tải và quản lý chromedriver
+        from webdriver_manager.chrome import ChromeDriverManager
+        service = Service(ChromeDriverManager().install())
+        
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        return driver
     except Exception as e:
-        logger.error(f"Unexpected error for {symbol}: {str(e)}")
-    finally:
-        driver.quit()
-
-
-
-
+        logger.error(f"Error initializing Chrome WebDriver: {str(e)}")
+        return None
 
 def scrape_index_data():
-    """Fetch data for VN-Index, HNX-Index, and UPCOM-Index"""
+    """
+    Scrape dữ liệu chỉ số từ TCBS, SSI, VNDIRECT và chỉ số ngành
+    """
+    logger.info("Starting index scraping...")
+    driver = get_chrome_driver()
+    if not driver:
+        return False
+
     try:
-        data = get_index_data()
-        if not data or 'data' not in data:
-            logger.warning("No index data received from API")
-            return False
-        
-        success = False
-        for index in data['data']:
+        # 1. Scrape chỉ số từ TCBS
+        driver.get("https://tcbs.com.vn/")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "market-index"))
+        )
+
+        # Dictionary ánh xạ class index với tên chỉ số
+        index_mapping = {
+            "vnindex": "VN-Index",
+            "hnxindex": "HNX-Index",
+            "upcomindex": "UPCOM-Index"
+        }
+
+        # Scrape chỉ số cơ bản
+        for index_class, index_name in index_mapping.items():
             try:
-                name = index['code']
-                price = float(index['price'])
-                change = float(index['change'])
-                
-                stock_index, created = StockIndex.objects.update_or_create(
-                    name=name,
+                index_element = driver.find_element(By.CLASS_NAME, index_class)
+                value = float(index_element.find_element(
+                    By.CLASS_NAME, "index-point").text.replace(',', ''))
+                change_text = index_element.find_element(
+                    By.CLASS_NAME, "index-change").text.strip('%')
+                change = float(change_text)
+
+                StockIndex.objects.update_or_create(
+                    name=index_name,
                     defaults={
-                        'value': price,
+                        'value': value,
                         'change': change,
                         'last_updated': timezone.now()
                     }
                 )
-                
-                logger.info(f"Successfully saved data for {name}: Price={price}, Change={change}")
-                success = True
+                logger.info(f"Updated {index_name}: value={value}, change={change}%")
+
             except Exception as e:
-                logger.error(f"Error processing index {name}: {str(e)}")
+                logger.error(f"Error updating {index_name}: {str(e)}")
                 continue
-        
-        if not success:
-            logger.warning("No index data was successfully processed")
-        
-        return success
-    
-    except Exception as e:
-        logger.error(f"Unexpected error in scrape_index_data: {str(e)}")
-        return False
 
-def get_index_data():
-    url = "https://finfo-api.vndirect.com.vn/v4/change_prices?q=code:VNINDEX,HNX,UPCOM"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except RequestException as e:
-        logger.error(f"Error fetching index data: {str(e)}")
-        return None
+        # 2. Scrape chỉ số VN30 và HNX30 từ SSI
+        driver.get("https://iboard.ssi.com.vn/")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "index-list"))
+        )
 
-def scrape_stock_data(symbol):
-    """Scrape data for individual stocks"""
-    try:
-        url = f"https://s.cafef.vn/Lich-su-giao-dich-{symbol}-1.chn"
-        soup = get_soup(url)
-        
-        # Tìm bảng dữ liệu
-        table = soup.find('table', {'id': 'GirdTable2'})
-        if table:
-            # Xử lý dữ liệu từ bảng
-            rows = table.find_all('tr')[1:]  # Bỏ qua hàng tiêu đề
-            
-            if rows:
-                stock, created = Stock.objects.get_or_create(symbol=symbol)
-                
-                for row in rows:
-                    cols = row.find_all('td')
-                    if len(cols) >= 7:
-                        try:
-                            date_str = cols[0].text.strip()
-                            date = datetime.strptime(date_str, '%d/%m/%Y').date()
-                            
-                            StockPrice.objects.update_or_create(
-                                stock=stock,
-                                date=date,
-                                defaults={
-                                    'close_price': float(cols[1].text.replace(',', '')),
-                                    'open_price': float(cols[4].text.replace(',', '')),
-                                    'high_price': float(cols[5].text.replace(',', '')),
-                                    'low_price': float(cols[6].text.replace(',', '')),
-                                    'volume': int(cols[3].text.replace(',', ''))
-                                }
-                            )
-                        except (ValueError, IndexError) as e:
-                            logger.error(f"Error parsing row data: {str(e)}")
-                            continue
-                
-                logger.info(f"Successfully scraped and saved data for {symbol}")
-                return True
-            
-        logger.warning(f"No data found for {symbol}")
-        return False
-        
-    except Exception as e:
-        logger.error(f"Error scraping stock {symbol}: {str(e)}")
-        return False
+        additional_indices = {
+            "vn30": "VN30",
+            "hnx30": "HNX30"
+        }
 
-def scrape_stock_data():
-    url = "https://finance.vietstock.vn/"  # Cập nhật URL chính xác
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    
-    max_retries = 3
-    retry_delay = 5  # seconds
+        for index_class, index_name in additional_indices.items():
+            try:
+                index_element = driver.find_element(By.CLASS_NAME, index_class)
+                value_element = index_element.find_element(By.CLASS_NAME, "index-value")
+                value = float(value_element.text.replace(',', ''))
+                change_element = index_element.find_element(By.CLASS_NAME, "index-change")
+                change = float(change_element.text.strip('%'))
 
-    for attempt in range(max_retries):
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Tìm và trích xuất dữ liệu cho VN-Index
-            vn_index = soup.find('div', {'id': 'price-box-1'})
-            if vn_index:
-                vn_index_value = vn_index.find('span', class_='price').text.strip()
-                vn_index_change = vn_index.find('span', class_='change').text.strip()
-                
-                # Cập nhật hoặc tạo mới đối tượng StockIndex
-                stock_index, created = StockIndex.objects.update_or_create(
-                    name="VN-Index",
+                StockIndex.objects.update_or_create(
+                    name=index_name,
                     defaults={
-                        'value': float(vn_index_value.replace(',', '')),
-                        'change': float(vn_index_change.replace(',', '')),
+                        'value': value,
+                        'change': change,
                         'last_updated': timezone.now()
                     }
                 )
-                logger.info(f"{'Created' if created else 'Updated'} VN-Index: {vn_index_value}")
+                logger.info(f"Updated {index_name}: value={value}, change={change}%")
 
-            # Tương tự cho HNX-Index và UPCOM-Index
-            # ...
+            except Exception as e:
+                logger.error(f"Error updating {index_name}: {str(e)}")
+                continue
 
-            return True  # Scraping thành công
-        except RequestException as e:
-            logger.error(f"Request failed on attempt {attempt + 1}: {str(e)}")
-            if attempt < max_retries - 1:
-                time.sleep(retry_delay)
-            else:
-                logger.error("Max retries reached. Scraping failed.")
-                return False
-        except Exception as e:
-            logger.error(f"An unexpected error occurred: {str(e)}")
+        # 3. Scrape VNMid và VNSmall từ VNDIRECT
+        driver.get("https://dstock.vndirect.com.vn/thi-truong-chung-khoan/chi-so")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "market-index-item"))
+        )
+
+        vnmid_small_indices = {
+            "vnmid": "VNMID",
+            "vnsml": "VNSMALL"
+        }
+
+        for index_class, index_name in vnmid_small_indices.items():
+            try:
+                index_element = driver.find_element(By.CLASS_NAME, index_class)
+                value = float(index_element.find_element(
+                    By.CLASS_NAME, "current-value").text.replace(',', ''))
+                change_element = index_element.find_element(By.CLASS_NAME, "change-value")
+                change = float(change_element.text.strip('%'))
+
+                StockIndex.objects.update_or_create(
+                    name=index_name,
+                    defaults={
+                        'value': value,
+                        'change': change,
+                        'last_updated': timezone.now()
+                    }
+                )
+                logger.info(f"Updated {index_name}: value={value}, change={change}%")
+
+            except NoSuchElementException:
+                logger.error(f"Could not find elements for {index_name}")
+                continue
+            except ValueError as e:
+                logger.error(f"Error parsing values for {index_name}: {str(e)}")
+                continue
+            except Exception as e:
+                logger.error(f"Unexpected error updating {index_name}: {str(e)}")
+                continue
+
+        # 4. Scrape chỉ số ngành từ TCBS
+        driver.get("https://tcbs.com.vn/vi_VN/industry")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "industry-index"))
+        )
+
+        # Dictionary cho các chỉ số ngành chính
+        industry_indices = {
+            "bank": "Ngân hàng",
+            "securities": "Chứng khoán",
+            "real-estate": "Bất động sản",
+            "oil-gas": "Dầu khí",
+            "steel": "Thép",
+            "retail": "Bán lẻ",
+            "insurance": "Bảo hiểm",
+            "technology": "Công nghệ",
+            "construction": "Xây dựng",
+            "logistics": "Logistics"
+        }
+
+        for index_class, index_name in industry_indices.items():
+            try:
+                # Tìm phần tử chứa thông tin chỉ số ngành
+                industry_element = driver.find_element(By.CLASS_NAME, f"industry-{index_class}")
+                
+                # Lấy giá trị chỉ số
+                value = float(industry_element.find_element(
+                    By.CLASS_NAME, "industry-value").text.replace(',', ''))
+                
+                # Lấy phần trăm thay đổi
+                change_element = industry_element.find_element(By.CLASS_NAME, "industry-change")
+                change = float(change_element.text.strip('%'))
+
+                # Cập nhật hoặc tạo mới trong database
+                StockIndex.objects.update_or_create(
+                    name=f"IDX-{index_name}",  # Thêm tiền tố để phân biệt với chỉ số thông thường
+                    defaults={
+                        'value': value,
+                        'change': change,
+                        'last_updated': timezone.now()
+                    }
+                )
+                logger.info(f"Updated industry index {index_name}: value={value}, change={change}%")
+
+            except NoSuchElementException:
+                logger.error(f"Could not find elements for industry {index_name}")
+                continue
+            except ValueError as e:
+                logger.error(f"Error parsing values for industry {index_name}: {str(e)}")
+                continue
+            except Exception as e:
+                logger.error(f"Unexpected error updating industry {index_name}: {str(e)}")
+                continue
+
+        # 5. Scrape thêm thông tin chi tiết cho mỗi ngành
+        for index_class, index_name in industry_indices.items():
+            try:
+                # Click vào ngành để xem chi tiết
+                industry_element = driver.find_element(By.CLASS_NAME, f"industry-{index_class}")
+                industry_element.click()
+                
+                # Chờ dữ liệu chi tiết được load
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "industry-detail"))
+                )
+
+                # Lấy thông tin về vốn hóa và P/E ngành
+                market_cap = float(driver.find_element(
+                    By.CLASS_NAME, "market-cap").text.replace(',', ''))
+                pe_ratio = float(driver.find_element(
+                    By.CLASS_NAME, "pe-ratio").text)
+
+                # Lưu thông tin bổ sung vào database
+                StockIndex.objects.update_or_create(
+                    name=f"IDX-{index_name}-PE",
+                    defaults={
+                        'value': pe_ratio,
+                        'change': 0,  # PE không có % thay đổi
+                        'last_updated': timezone.now()
+                    }
+                )
+
+                logger.info(f"Updated detailed info for {index_name}: PE={pe_ratio}")
+
+            except Exception as e:
+                logger.error(f"Error updating detailed info for industry {index_name}: {str(e)}")
+                continue
+
+        logger.info("All index and industry data updated successfully")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error scraping index and industry data: {str(e)}")
+        return False
+    finally:
+        driver.quit()
+
+def scrape_stock_data(symbol):
+    """
+    Scrape dữ liệu chi tiết của một mã cổ phiếu từ TCBS
+    """
+    logger.info(f"Starting to scrape data for {symbol}")
+    driver = get_chrome_driver()
+    if not driver:
+        return False
+
+    try:
+        # Truy cập trang chi tiết cổ phiếu trên TCBS
+        url = f'https://tcinvest.tcbs.com.vn/tc-price/tc-analysis/{symbol}'
+        driver.get(url)
+        logger.info(f"Accessing URL: {url}")
+
+        # Chờ cho bảng dữ liệu được load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "stock-price-info"))
+        )
+
+        # Lấy thông tin giá hiện tại
+        try:
+            price_info = driver.find_element(By.CLASS_NAME, "stock-price-info")
+            current_price = float(price_info.find_element(
+                By.CLASS_NAME, "current-price").text.replace(',', ''))
+            
+            # Lấy thông tin khối lượng giao dịch
+            volume = int(price_info.find_element(
+                By.CLASS_NAME, "volume").text.replace(',', ''))
+            
+            # Lấy giá cao nhất, thấp nhất trong ngày
+            price_range = price_info.find_elements(By.CLASS_NAME, "price-range")
+            high_price = float(price_range[0].text.replace(',', ''))
+            low_price = float(price_range[1].text.replace(',', ''))
+            
+            # Lấy giá mở cửa
+            open_price = float(price_info.find_element(
+                By.CLASS_NAME, "open-price").text.replace(',', ''))
+
+            # Lưu dữ liệu vào database
+            stock = Stock.objects.get(symbol=symbol)
+            today = timezone.now().date()
+
+            StockPrice.objects.update_or_create(
+                stock=stock,
+                date=today,
+                defaults={
+                    'open_price': open_price,
+                    'high_price': high_price,
+                    'low_price': low_price,
+                    'close_price': current_price,
+                    'volume': volume
+                }
+            )
+
+            # Lấy dữ liệu lịch sử
+            driver.find_element(By.ID, "historical-data-tab").click()
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "historical-data-table"))
+            )
+
+            # Parse bảng dữ liệu lịch sử
+            table = driver.find_element(By.CLASS_NAME, "historical-data-table")
+            rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Bỏ qua header
+
+            for row in rows[:30]:  # Lấy 30 ngày gần nhất
+                cols = row.find_elements(By.TAG_NAME, "td")
+                if len(cols) >= 6:
+                    date_str = cols[0].text
+                    date = datetime.strptime(date_str, "%d/%m/%Y").date()
+                    
+                    HistoricalData.objects.update_or_create(
+                        stock=stock,
+                        date=date,
+                        defaults={
+                            'open_price': float(cols[1].text.replace(',', '')),
+                            'high_price': float(cols[2].text.replace(',', '')),
+                            'low_price': float(cols[3].text.replace(',', '')),
+                            'close_price': float(cols[4].text.replace(',', '')),
+                            'volume': int(cols[5].text.replace(',', ''))
+                        }
+                    )
+
+            logger.info(f"Successfully updated data for {symbol}")
+            return True
+
+        except NoSuchElementException as e:
+            logger.error(f"Could not find element for {symbol}: {str(e)}")
             return False
+        except ValueError as e:
+            logger.error(f"Error parsing values for {symbol}: {str(e)}")
+            return False
+
+    except Exception as e:
+        logger.error(f"Error scraping data for {symbol}: {str(e)}")
+        return False
+    finally:
+        driver.quit()
+
+def run_scraping():
+    """
+    Chạy toàn bộ quá trình scraping
+    """
+    logger.info("Starting full scraping process...")
+    try:
+        # Cập nhật chỉ số
+        if not scrape_index_data():
+            logger.error("Failed to update index data")
+            return False
+
+        # Cập nhật dữ liệu cổ phiếu
+        stocks = Stock.objects.all()
+        for stock in stocks:
+            if not scrape_stock_data(stock.symbol):
+                logger.warning(f"Failed to update data for {stock.symbol}")
+                continue
+            time.sleep(1)  # Tránh request quá nhanh
+
+        logger.info("Full scraping process completed successfully")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error in run_scraping: {str(e)}")
+        return False
