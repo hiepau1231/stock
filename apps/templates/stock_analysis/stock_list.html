@@ -1,92 +1,93 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Danh sách cổ phiếu{% endblock %}
-
-{% block content %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h6 class="text-primary mb-0">Danh sách cổ phiếu</h6>
-                        </div>
-                        <div class="col text-right">
-                            <div class="input-group">
-                                <input type="text" id="stockSearch" class="form-control" placeholder="Tìm kiếm mã cổ phiếu...">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body">
-                    {% if stocks %}
-                    <div class="table-responsive">
-                        <table class="table align-items-center table-flush" id="stockTable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Mã CP</th>
-                                    <th>Tên công ty</th>
-                                    <th>Sàn</th>
-                                    <th>Ngành</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for stock in stocks %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'stock_analysis:stock_detail' symbol=stock.ticker %}" class="text-primary font-weight-bold">
-                                            {{ stock.ticker }}
-                                        </a>
-                                    </td>
-                                    <td>{{ stock.companyName }}</td>
-                                    <td>{{ stock.exchange }}</td>
-                                    <td>{{ stock.industryName }}</td>
-                                    <td>
-                                        <a href="{% url 'stock_analysis:add_to_watchlist' symbol=stock.ticker %}" class="btn btn-sm btn-primary">
-                                            Thêm vào theo dõi
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p>Không có dữ liệu cổ phiếu hoặc có lỗi khi tải dữ liệu.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock content %}
-
-{% block javascripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('stockSearch');
-    const stockTable = document.getElementById('stockTable');
-    const rows = stockTable.getElementsByTagName('tr');
-
-    searchInput.addEventListener('keyup', function(e) {
-        const searchText = e.target.value.toLowerCase();
-        
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            const symbol = row.cells[0].textContent.toLowerCase();
-            const name = row.cells[1].textContent.toLowerCase();
-            
-            if (symbol.includes(searchText) || name.includes(searchText)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        }
-    });
-});
-</script>
-{% endblock javascripts %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Danh sách cổ phiếu{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="text-primary mb-0">Danh sách cổ phiếu</h6>
+                        </div>
+                        <div class="col text-right">
+                            <div class="input-group">
+                                <input type="text" id="stockSearch" class="form-control" placeholder="Tìm kiếm mã cổ phiếu...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% if stocks %}
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush" id="stockTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Mã CP</th>
+                                    <th>Tên công ty</th>
+                                    <th>Sàn</th>
+                                    <th>Ngành</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in stocks %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'stock_analysis:stock_detail' symbol=stock.ticker %}" class="text-primary font-weight-bold">
+                                            {{ stock.ticker }}
+                                        </a>
+                                    </td>
+                                    <td>{{ stock.companyName }}</td>
+                                    <td>{{ stock.exchange }}</td>
+                                    <td>{{ stock.industryName }}</td>
+                                    <td>
+                                        <a href="{% url 'stock_analysis:add_to_watchlist' symbol=stock.ticker %}" class="btn btn-sm btn-primary">
+                                            Thêm vào theo dõi
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>Không có dữ liệu cổ phiếu hoặc có lỗi khi tải dữ liệu.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('stockSearch');
+    const stockTable = document.getElementById('stockTable');
+    const rows = stockTable.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const symbol = row.cells[0].textContent.toLowerCase();
+            const name = row.cells[1].textContent.toLowerCase();
+            
+            if (symbol.includes(searchText) || name.includes(searchText)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+</script>
+{% endblock javascripts %}
+
