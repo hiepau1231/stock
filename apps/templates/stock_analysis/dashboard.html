@@ -1,96 +1,157 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %} Dashboard {% endblock %}
-
-{% block content %}
-<div class="container-fluid mt-4">
-    <!-- Market Overview -->
-    <div class="row">
-        <div class="col-xl-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="text-primary">Tổng quan thị trường</h6>
-                </div>
-                <div class="card-body">
-                    {% if market_overview %}
-                        <div class="table-responsive">
-                            <table class="table align-items-center">
-                                <thead>
-                                    <tr>
-                                        <th>Chỉ số</th>
-                                        <th>Giá trị</th>
-                                        <th>Thay đổi</th>
-                                        <th>% Thay đổi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for index in market_overview %}
-                                    <tr>
-                                        <td>{{ index.index_name }}</td>
-                                        <td>{{ index.value }}</td>
-                                        <td>{{ index.change }}</td>
-                                        <td>{{ index.change_percent }}%</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p>Không có dữ liệu thị trường</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Industry Analysis -->
-    <div class="row">
-        <div class="col-xl-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="text-primary">Phân tích ngành</h6>
-                </div>
-                <div class="card-body">
-                    {% if industry_analysis %}
-                        <div class="table-responsive">
-                            <table class="table align-items-center">
-                                <thead>
-                                    <tr>
-                                        <th>Ngành</th>
-                                        <th>Số lượng CP</th>
-                                        <th>Vốn hóa (tỷ)</th>
-                                        <th>% Thay đổi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for industry in industry_analysis %}
-                                    <tr>
-                                        <td>{{ industry.industry_name }}</td>
-                                        <td>{{ industry.stock_count }}</td>
-                                        <td>{{ industry.market_cap }}</td>
-                                        <td>{{ industry.change_percent }}%</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p>Không có dữ liệu phân tích ngành</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endblock content %}
-
-{% block javascripts %}
-<!-- Thay thế script cũ bằng CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Add any JavaScript for charts or real-time updates here
-</script>
-{% endblock javascripts %}
-
+{% extends "base.html" %}
+
+{% load static %}
+
+
+
+{% block title %} Dashboard {% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <!-- Market Overview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Tổng quan thị trường</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="marketOverviewChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Industry Analysis -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Phân tích ngành</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="industryAnalysisChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Gainers and Losers -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Top Tăng giá</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Mã CP</th>
+                                <th>Giá</th>
+                                <th>Thay đổi (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in top_gainers %}
+                            <tr>
+                                <td>{{ stock.symbol }}</td>
+                                <td>{{ stock.price }}</td>
+                                <td class="text-success">+{{ stock.change_percent }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Top Giảm giá</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Mã CP</th>
+                                <th>Giá</th>
+                                <th>Thay đổi (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in top_losers %}
+                            <tr>
+                                <td>{{ stock.symbol }}</td>
+                                <td>{{ stock.price }}</td>
+                                <td class="text-danger">{{ stock.change_percent }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if market_overview_labels and market_overview_values %}
+<script>
+    // Market Overview Chart
+    var marketOverviewCtx = document.getElementById('marketOverviewChart').getContext('2d');
+    var marketOverviewChart = new Chart(marketOverviewCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ market_overview_labels|safe }},
+            datasets: [{
+                label: 'Giá trị',
+                data: {{ market_overview_values|safe }},
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+
+{% if industry_analysis_labels and industry_analysis_values %}
+<script>
+    // Industry Analysis Chart
+    var industryAnalysisCtx = document.getElementById('industryAnalysisChart').getContext('2d');
+    var industryAnalysisChart = new Chart(industryAnalysisCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ industry_analysis_labels|safe }},
+            datasets: [{
+                data: {{ industry_analysis_values|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
+{% endif %}
+{% endblock javascripts %}
+
+
+

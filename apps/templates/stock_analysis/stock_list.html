@@ -1,93 +1,117 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Danh sách cổ phiếu{% endblock %}
-
-{% block content %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h6 class="text-primary mb-0">Danh sách cổ phiếu</h6>
-                        </div>
-                        <div class="col text-right">
-                            <div class="input-group">
-                                <input type="text" id="stockSearch" class="form-control" placeholder="Tìm kiếm mã cổ phiếu...">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body">
-                    {% if stocks %}
-                    <div class="table-responsive">
-                        <table class="table align-items-center table-flush" id="stockTable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Mã CP</th>
-                                    <th>Tên công ty</th>
-                                    <th>Sàn</th>
-                                    <th>Ngành</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for stock in stocks %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'stock_analysis:stock_detail' symbol=stock.ticker %}" class="text-primary font-weight-bold">
-                                            {{ stock.ticker }}
-                                        </a>
-                                    </td>
-                                    <td>{{ stock.companyName }}</td>
-                                    <td>{{ stock.exchange }}</td>
-                                    <td>{{ stock.industryName }}</td>
-                                    <td>
-                                        <a href="{% url 'stock_analysis:add_to_watchlist' symbol=stock.ticker %}" class="btn btn-sm btn-primary">
-                                            Thêm vào theo dõi
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p>Không có dữ liệu cổ phiếu hoặc có lỗi khi tải dữ liệu.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock content %}
-
-{% block javascripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('stockSearch');
-    const stockTable = document.getElementById('stockTable');
-    const rows = stockTable.getElementsByTagName('tr');
-
-    searchInput.addEventListener('keyup', function(e) {
-        const searchText = e.target.value.toLowerCase();
-        
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            const symbol = row.cells[0].textContent.toLowerCase();
-            const name = row.cells[1].textContent.toLowerCase();
-            
-            if (symbol.includes(searchText) || name.includes(searchText)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        }
-    });
-});
-</script>
-{% endblock javascripts %}
-
+{% extends "base.html" %}
+
+{% load static %}
+
+
+
+{% block title %}Danh sách cổ phiếu{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <h2 class="mb-4">Danh sách cổ phiếu</h2>
+
+    <!-- Bộ lọc và sắp xếp -->
+    <div class="mb-3">
+        <form method="get" class="form-inline">
+            <input type="text" name="search" class="form-control mr-2" placeholder="Tìm kiếm cổ phiếu" value="{{ request.GET.search }}">
+            <select name="industry" class="form-control mr-2">
+                <option value="">Tất cả ngành</option>
+                {% for industry in industries %}
+                <option value="{{ industry }}" {% if request.GET.industry == industry %}selected{% endif %}>{{ industry }}</option>
+                {% endfor %}
+            </select>
+            <select name="sort" class="form-control mr-2">
+                <option value="symbol" {% if request.GET.sort == 'symbol' %}selected{% endif %}>Sắp xếp theo mã</option>
+                <option value="company_name" {% if request.GET.sort == 'company_name' %}selected{% endif %}>Sắp xếp theo tên công ty</option>
+                <option value="market_cap" {% if request.GET.sort == 'market_cap' %}selected{% endif %}>Sắp xếp theo vốn hóa</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Áp dụng</button>
+        </form>
+    </div>
+
+    <!-- Bảng danh sách cổ phiếu -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Mã cổ phiếu</th>
+                    <th>Tên công ty</th>
+                    <th>Ngành</th>
+                    <th>Giá hiện tại</th>
+                    <th>Thay đổi</th>
+                    <th>Khối lượng</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <td>
+                        {% if stock.symbol %}
+                            <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">{{ stock.symbol }}</a>
+                        {% else %}
+                            {{ stock.ticker|default:"N/A" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ stock.company_name|default:"N/A" }}</td>
+                    <td>{{ stock.industry|default:"N/A" }}</td>
+                    <td>{{ stock.current_price|default:"N/A" }}</td>
+                    <td>{{ stock.change|default:"N/A" }}</td>
+                    <td>{{ stock.volume|default:"N/A" }}</td>
+                    <td>
+                        {% if stock.symbol %}
+                            <a href="{% url 'stock_analysis:add_to_watchlist' stock.symbol %}" class="btn btn-sm btn-outline-primary">Thêm vào watchlist</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">Không có dữ liệu cổ phiếu.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân trang -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Trước</a></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Sau</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+{% endblock content %}
+
+
+
+{% block javascripts %}
+
+<script>
+
+// Thêm JavaScript cho các tính năng tương tác nếu cần
+
+</script>
+
+{% endblock javascripts %}
+
+
+
