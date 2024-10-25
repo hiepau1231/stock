@@ -18,6 +18,12 @@ import pandas as pd
 
 import yfinance as yf
 
+import numpy as np
+
+from django.utils import timezone  # Sửa lại import này
+
+from datetime import timedelta  # Chỉ import timedelta từ datetime
+
 
 
 class StockModelTestCase(TestCase):
@@ -161,24 +167,14 @@ class ViewsTestCase(TestCase):
 
         self.assertTemplateUsed(response, 'stock_analysis/dashboard.html')
 
-
-
     def test_stock_list_view(self):
-
         response = self.client.get(reverse('stock_analysis:stock_list'))
-
         self.assertEqual(response.status_code, 200)
-
         self.assertTemplateUsed(response, 'stock_analysis/stock_list.html')
 
-
-
     def test_stock_detail_view(self):
-
         response = self.client.get(reverse('stock_analysis:stock_detail', args=['VNM']))
-
         self.assertEqual(response.status_code, 200)
-
         self.assertTemplateUsed(response, 'stock_analysis/stock_detail.html')
 
 
@@ -186,6 +182,183 @@ class ViewsTestCase(TestCase):
 
 # Thêm các test case khác nếu cần
 
+class TechnicalIndicatorTestCase(TestCase):
+    def setUp(self):
+        # Tạo user test và login
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='12345'
+        )
+        self.client.login(username='testuser', password='12345')
+        
+        # Tạo dữ liệu mẫu cho test
+        self.stock = Stock.objects.create(
+            symbol="VNM",
+            name="Vinamilk",
+            current_price=100.0,
+            change=1.0,
+            percent_change=1.0
+        )
+        
+        # Tạo dữ liệu lịch sử
+        dates = pd.date_range(end='2024-01-01', periods=50)
+        for i, date in enumerate(dates):
+            HistoricalData.objects.create(
+                stock=self.stock,
+                date=date.date(),
+                open_price=100 + i,
+                high_price=105 + i,
+                low_price=95 + i,
+                close_price=102 + i,
+                volume=1000000 + i * 1000
+            )
 
+    def test_rsi_calculation(self):
+        response = self.client.get(
+            reverse('stock_analysis:technical_indicators', args=['VNM']),
+            HTTP_ACCEPT='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        
+        data = response.json()
+        
+        # Kiểm tra các trường trong response
+        self.assertIn('rsi', data)
+        self.assertIn('macd', data)
+        self.assertIn('signal', data)
+        self.assertIn('bb_upper', data)
+        self.assertIn('bb_middle', data)
+        self.assertIn('bb_lower', data)
+        
+        # Kiểm tra giá trị RSI nằm trong khoảng hợp lý
+        self.assertTrue(0 <= data['rsi'] <= 100)
 
+    def test_macd_calculation(self):
+        response = self.client.get(
+            reverse('stock_analysis:technical_indicators', args=['VNM']),
+            HTTP_ACCEPT='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        
+        data = response.json()
+        
+        # MACD line nên khác signal line
+        self.assertNotEqual(data['macd'], data['signal'])
+
+    def test_bollinger_bands(self):
+        response = self.client.get(
+            reverse('stock_analysis:technical_indicators', args=['VNM']),
+            HTTP_ACCEPT='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        
+        data = response.json()
+        
+        # Upper band phải lớn hơn middle band
+        self.assertGreater(data['bb_upper'], data['bb_middle'])
+        # Lower band phải nhỏ hơn middle band
+        self.assertLess(data['bb_lower'], data['bb_middle'])
+
+    def test_invalid_stock_symbol(self):
+        response = self.client.get(
+            reverse('stock_analysis:technical_indicators', args=['INVALID']),
+            HTTP_ACCEPT='application/json'
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+    @patch('pandas.DataFrame.rolling')
+    def test_rsi_calculation_with_mock(self, mock_rolling):
+        # Mock rolling window calculations
+        mock_rolling.return_value.mean.return_value = pd.Series([0.5, 0.6, 0.7])
+        
+        response = self.client.get(
+            reverse('stock_analysis:technical_indicators', args=['VNM']),
+            HTTP_ACCEPT='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+class StockDetailViewTest(TestCase):
+    def setUp(self):
+        # Tạo user test và login
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='12345'
+        )
+        self.client.login(username='testuser', password='12345')
+        
+        # Tạo dữ liệu mẫu với giá trị lớn để test intcomma
+        self.stock = Stock.objects.create(
+            symbol="VNM",
+            name="Vinamilk",
+            current_price=100000.0,  # Giá trị lớn để test intcomma
+            change=1000.0,
+            percent_change=1.0
+        )
+        
+        # Tạo dữ liệu lịch sử
+        current_date = timezone.now()  # Sử dụng django.utils.timezone
+        for i in range(5):
+            HistoricalData.objects.create(
+                stock=self.stock,
+                date=(current_date - timedelta(days=i)).date(),
+                open_price=100000 + i * 1000,
+                high_price=105000 + i * 1000,
+                low_price=95000 + i * 1000,
+                close_price=102000 + i * 1000,
+                volume=1000000 + i * 10000
+            )
+        
+        self.url = reverse('stock_analysis:stock_detail', args=['VNM'])
+
+    def test_stock_detail_view_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'stock_analysis/stock_detail.html')
+
+    def test_stock_detail_context(self):
+        response = self.client.get(self.url)
+        self.assertIn('stock', response.context)
+        self.assertIn('historical_data', response.context)
+        
+        # Test số được format đúng (thêm dấu phẩy ngăn cách hàng nghìn)
+        content = response.content.decode()
+        
+        # Test giá hiện tại
+        current_price = response.context['stock'].current_price
+        formatted_price = "{:,.2f}".format(current_price)  # Format số theo định dạng Python chuẩn
+        self.assertIn(formatted_price, content)
+        
+        # Test dữ liệu lịch sử
+        historical_data = response.context['historical_data']
+        if historical_data:
+            first_record = historical_data[0]
+            # Kiểm tra các giá trong dữ liệu lịch sử
+            for price in [
+                first_record.open_price,
+                first_record.high_price,
+                first_record.low_price,
+                first_record.close_price
+            ]:
+                formatted_price = "{:,.2f}".format(price)
+                self.assertIn(formatted_price, content)
+            
+            # Kiểm tra volume
+            formatted_volume = "{:,}".format(first_record.volume)
+            self.assertIn(formatted_volume, content)
+
+    def test_stock_detail_technical_indicators_load(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'technical_indicators')
+        self.assertContains(response, 'tradingview_chart')
+        
+    def test_historical_data_display(self):
+        response = self.client.get(self.url)
+        # Kiểm tra dữ liệu lịch sử được hiển thị
+        self.assertContains(response, 'Lịch sử giao dịch')
+        self.assertContains(response, '1,000,000')  # Test volume formatting
 

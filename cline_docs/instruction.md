@@ -228,45 +228,48 @@ stock_analysis_project/
 │   ├── urls.py
 │   └── wsgi.py
 ├── apps/
-│   └── stock_analysis/
-│       ├── __init__.py
-│       ├── models.py
-│       ├── views.py
-│       ├── urls.py
-│       ├── services/
-│       │   └── stock_service.py
-│       ├── management/
-│       │   └── commands/
-│       │       └── scrape_stock_data.py
-│       └── templatetags/
+│   ├── stock_analysis/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   ├── forms.py
+│   │   ├── services/
+│   │   │   └── stock_service.py
+│   │   └── templates/
+│   │       └── stock_analysis/
+│   │           ├── dashboard.html
+│   │           ├── stock_list.html
+│   │           ├── stock_detail.html
+│   │           ├── portfolio_list.html
+│   │           ├── portfolio_detail.html
+│   │           ├── portfolio_create.html
+│   │           ├── compare.html
+│   │           └── stock_comparison.html
+│   ├── predictions/
+│   │   └── models.py
+│   └── authentication/
 ├── templates/
 │   ├── base.html
+│   ├── home/
+│   │   └── dashboard.html
 │   └── stock_analysis/
-│       ├── dashboard.html
-│       ├── stock_list.html
-│       ├── portfolio_list.html
-│       └── compare_stocks.html
+│       └── error.html
 ├── static/
-│   ├── assets/
-│   │   ├── css/
-│   │   ├── js/
-│   │   ├── img/
-│   │   ├── scss/
-│   │   │   └── core/
-│   │   │       └── list-groups/
-│   │   │           ├── _list-check.scss
-│   │   │           └── _list-group.scss
-│   │   └── vendor/
-│   │       ├── font-awesome/
-│   │       │   └── HELP-US-OUT.txt
-│   │       └── prismjs/
-│   │           └── components.json
+│   └── assets/
+│       └── vendor/
+│           └── moment/
+│               └── locale/
+│                   └── vi.js
 ├── cline_docs/
-│   ├── instruction.md
-│   └── currentTask.md
+│   ├── currentTask.md
+│   └── instruction.md
 ├── requirements.txt
 ├── README.md
-└── package.json
+└── test_vnstock.py
 
 
 ✅ Hoàn thành: Cấu trúc dự án đã được thiết lập theo đề xuất.

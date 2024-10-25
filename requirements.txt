@@ -24,6 +24,7 @@ pydantic==1.10.13
 IPython>=8.0.0
 jupyter>=1.0.0
 plotly>=5.18.0
+ta-lib==0.4.24  # Technical Analysis Library
 
 # Các dependencies khác
 certifi==2024.2.2

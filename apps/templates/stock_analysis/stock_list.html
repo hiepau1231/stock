@@ -1,54 +1,144 @@
-{% extends "layouts/base.html" %}
-
-{% block title %} Stock List {% endblock %}
-
-{% block content %}
-
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header pb-0">
-                    <h6>Stock List</h6>
-                </div>
-                <div class="card-body px-0 pt-0 pb-2">
-                    <div class="table-responsive p-0">
-                        <table class="table align-items-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Symbol</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Name</th>
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Exchange</th>
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Current Price</th>
-                                    <th class="text-secondary opacity-7"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for stock in stocks %}
-                                <tr>
-                                    <td>{{ stock.symbol }}</td>
-                                    <td>{{ stock.name }}</td>
-                                    <td>{{ stock.exchange }}</td>
-                                    <td>{{ stock.current_price }}</td>
-                                    <td>
-                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">View</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endblock content %}
-
-{% block javascripts %}
-<script>
-    // Thêm c��c script JavaScript cần thiết ở đây
-</script>
-{% endblock javascripts %}
-
+{% extends "layouts/base.html" %}
+{% load humanize %}  {# Thêm dòng này #}
+
+
+
+{% block title %} Stock List {% endblock %}
+
+
+
+{% block content %}
+
+
+
+<div class="container-fluid py-4">
+
+    <div class="row">
+
+        <div class="col-12">
+
+            <div class="card mb-4">
+
+                <div class="card-header pb-0">
+
+                    <h6>Stock List</h6>
+
+                </div>
+
+                <div class="card-body px-0 pt-0 pb-2">
+
+                    <div class="table-responsive p-0">
+
+                        <table class="table align-items-center mb-0">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Symbol</th>
+
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Exchange</th>
+
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Price</th>
+
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Change</th>
+
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">% Change</th>
+
+                                    <th class="text-secondary opacity-7"></th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for stock in stocks %}
+
+                                <tr>
+
+                                    <td class="text-center">
+                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">
+                                            {{ stock.symbol }}
+                                        </a>
+                                    </td>
+
+                                    <td class="text-center">{{ stock.name }}</td>
+
+                                    <td class="text-center">{{ stock.exchange }}</td>
+
+                                    <td class="text-center">{{ stock.current_price|floatformat:2 }}</td>
+
+                                    <td class="text-center {% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% endif %}">
+                                        {{ stock.change|floatformat:2 }}
+                                    </td>
+
+                                    <td class="text-center {% if stock.percent_change > 0 %}text-success{% elif stock.percent_change < 0 %}text-danger{% endif %}">
+                                        {{ stock.percent_change|floatformat:2 }}%
+                                    </td>
+
+                                    <td class="text-center">
+                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}" class="btn btn-link text-secondary mb-0">
+                                            <i class="fa fa-ellipsis-v text-xs"></i>
+                                        </a>
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+{% endblock content %}
+
+
+
+{% block javascripts %}
+
+<script>
+
+    $(document).ready(function() {
+        // Thêm DataTables nếu cần
+        $('.table').DataTable({
+            "pageLength": 25,
+            "order": [[ 0, "asc" ]],
+            "language": {
+                "search": "Tìm kiếm:",
+                "lengthMenu": "Hiển thị _MENU_ dòng",
+                "info": "Hiển thị _START_ đến _END_ trong tổng số _TOTAL_ dòng",
+                "infoEmpty": "Hiển thị 0 đến 0 trong tổng số 0 dòng",
+                "infoFiltered": "(lọc từ _MAX_ dòng)",
+                "paginate": {
+                    "first": "Đầu",
+                    "last": "Cuối",
+                    "next": "Sau",
+                    "previous": "Trước"
+                }
+            }
+        });
+    });
+
+</script>
+
+{% endblock javascripts %}
+
+
+

@@ -98,22 +98,17 @@ class StockListView(ListView):
     @cache_page(60 * 15)  # Cache trong 15 phút
     @query_debugger
     def get(self, request):
+        # Bỏ select_related vì Stock model không có foreign key
         stocks = optimize_queryset(
             Stock.objects.all(),
-            select_related=['latest_price'],
             prefetch_related=['historical_data']
         )
         context = {'stocks': stocks}
-        return render(request, 'stock_analysis/stock_list.html', context)
-
-
+        return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
-
         context['segment'] = 'stock_list'
-
         return context
 
 
@@ -147,9 +142,9 @@ def dashboard(request):
 @login_required
 
 def stock_list(request):
+    # Bỏ select_related vì Stock model không có foreign key
     stocks = optimize_queryset(
         Stock.objects.all(),
-        select_related=['latest_price'],
         prefetch_related=['historical_data']
     )
     context = {'stocks': stocks}
@@ -184,50 +179,22 @@ class StockDetailView(LoginRequiredMixin, DetailView):
 
     slug_url_kwarg = 'symbol'
 
-
-
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
-
         symbol = self.object.symbol
-
-        
-
         # Lấy dữ liệu lịch sử
-
         historical_data = stock_service.get_historical_data(symbol, '2023-01-01', '2023-12-31')
-
         context['historical_data'] = historical_data
-
-        
-
         # Chuẩn bị dữ liệu cho biểu đồ
-
         if historical_data:
-
             context['dates'] = json.dumps([item['date'] for item in historical_data])
-
             context['prices'] = json.dumps([item['close'] for item in historical_data])
-
-        
-
         # Lấy dữ liệu intraday
-
         intraday_data = stock_service.get_stock_intraday(symbol)
-
         context['intraday_data'] = intraday_data.to_dict('records') if intraday_data is not None else []
-
-        
-
         # Lấy thông tin tổng quan về công ty
-
         company_overview = stock_service.get_company_overview(symbol)
-
         context['company_overview'] = company_overview
-
-        
-
         return context
 
 
@@ -244,10 +211,7 @@ class PortfolioListView(LoginRequiredMixin, ListView):
 
     context_object_name = 'portfolios'
 
-
-
     def get_queryset(self):
-
         return Portfolio.objects.filter(user=self.request.user)
 
 
@@ -262,12 +226,8 @@ class PortfolioCreateView(LoginRequiredMixin, CreateView):
 
     success_url = reverse_lazy('stock_analysis:portfolio_list')
 
-
-
     def form_valid(self, form):
-
         form.instance.user = self.request.user
-
         return super().form_valid(form)
 
 
@@ -289,28 +249,16 @@ class PortfolioDetailView(LoginRequiredMixin, DetailView):
         context = {'portfolio': portfolio, 'items': items, 'total_value': total_value}
         return render(request, 'stock_analysis/portfolio_detail.html', context)
 
-
-
     def get_queryset(self):
-
         return Portfolio.objects.filter(user=self.request.user)
 
-
-
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
-
         portfolio = self.object
-
         items = portfolio.portfolioitem_set.all()
-
         total_value = sum(item.quantity * item.stock.current_price for item in items)
-
         context['items'] = items
-
         context['total_value'] = total_value
-
         return context
 
 
@@ -379,12 +327,8 @@ class WatchListView(LoginRequiredMixin, ListView):
 
     context_object_name = 'watchlist'
 
-
-
     def get_queryset(self):
-
         watchlist, created = WatchList.objects.get_or_create(user=self.request.user)
-
         return watchlist.stocks.all()
 
 
@@ -482,6 +426,71 @@ def stock_intraday(request, symbol):
     else:
 
         return JsonResponse({'error': 'Unable to fetch intraday data'}, status=400)
+
+
+
+@login_required
+def get_technical_indicators(request, symbol):
+    try:
+        # Kiểm tra stock tồn tại
+        try:
+            stock = Stock.objects.get(symbol=symbol)
+        except Stock.DoesNotExist:
+            return JsonResponse(
+                {'error': f'Stock with symbol {symbol} not found'}, 
+                status=404  # Thay đổi từ 400 thành 404 cho nhất quán
+            )
+        
+        # Lấy dữ liệu lịch sử
+        historical_data = stock.historical_data.all().order_by('date')
+        if not historical_data.exists():
+            return JsonResponse(
+                {'error': f'No historical data found for {symbol}'}, 
+                status=404
+            )
+        
+        # Convert to pandas DataFrame
+        df = pd.DataFrame(list(historical_data.values()))
+        
+        # Tính RSI
+        delta = df['close_price'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        # Tính MACD
+        exp1 = df['close_price'].ewm(span=12, adjust=False).mean()
+        exp2 = df['close_price'].ewm(span=26, adjust=False).mean()
+        macd = exp1 - exp2
+        signal = macd.ewm(span=9, adjust=False).mean()
+        
+        # Tính Bollinger Bands
+        sma = df['close_price'].rolling(window=20).mean()
+        std = df['close_price'].rolling(window=20).std()
+        bb_upper = sma + (std * 2)
+        bb_lower = sma - (std * 2)
+        
+        # Lấy giá trị mới nhất
+        indicators = {
+            'rsi': float(rsi.iloc[-1]),  # Convert numpy types to Python native types
+            'macd': float(macd.iloc[-1]),
+            'signal': float(signal.iloc[-1]),
+            'bb_upper': float(bb_upper.iloc[-1]),
+            'bb_middle': float(sma.iloc[-1]),
+            'bb_lower': float(bb_lower.iloc[-1])
+        }
+        
+        return JsonResponse(indicators)
+    except Exception as e:
+        logger.error(f"Error calculating indicators for {symbol}: {str(e)}")
+        # Log lỗi nhưng vẫn trả về 404 nếu không tìm thấy stock
+        if isinstance(e, Stock.DoesNotExist):
+            return JsonResponse({'error': str(e)}, status=404)
+        # Các lỗi khác trả về 400
+        return JsonResponse({'error': str(e)}, status=400)
+
+
 
 
 
