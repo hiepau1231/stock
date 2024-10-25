@@ -1,135 +1,54 @@
-{% extends "base.html" %}
-
-{% load static %}
-
-
-
-{% block title %}Danh sách cổ phiếu{% endblock %}
-
-
-
-{% block content %}
-
-<div class="container-fluid mt-4">
-
-    <h2 class="mb-4">Danh sách cổ phiếu</h2>
-
-    <!-- Bộ lọc và sắp xếp -->
-    <div class="mb-3">
-        <form method="get" class="form-inline">
-            <input type="text" name="search" class="form-control mr-2" placeholder="Tìm kiếm cổ phiếu" value="{{ request.GET.search }}">
-            <select name="industry" class="form-control mr-2">
-                <option value="">Tất cả ngành</option>
-                {% for industry in industries %}
-                <option value="{{ industry }}" {% if request.GET.industry == industry %}selected{% endif %}>{{ industry }}</option>
-                {% endfor %}
-            </select>
-            <select name="sort" class="form-control mr-2">
-                <option value="symbol" {% if request.GET.sort == 'symbol' %}selected{% endif %}>Sắp xếp theo mã</option>
-                <option value="company_name" {% if request.GET.sort == 'company_name' %}selected{% endif %}>Sắp xếp theo tên công ty</option>
-                <option value="market_cap" {% if request.GET.sort == 'market_cap' %}selected{% endif %}>Sắp xếp theo vốn hóa</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Áp dụng</button>
-        </form>
-    </div>
-
-    <!-- Form so sánh cổ phiếu -->
-    <form action="{% url 'stock_analysis:compare_stocks' %}" method="post" id="compareForm">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-info mb-3" id="compareButton" disabled>So sánh cổ phiếu đã chọn</button>
-
-        <!-- Bảng danh sách cổ phiếu -->
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>So sánh</th>
-                        <th>Mã cổ phiếu</th>
-                        <th>Tên công ty</th>
-                        <th>Ngành</th>
-                        <th>Giá hiện tại</th>
-                        <th>Thay đổi</th>
-                        <th>Khối lượng</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stock in stocks %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="compare" value="{{ stock.symbol }}" class="compare-checkbox">
-                        </td>
-                        <td>
-                            {% if stock.symbol %}
-                                <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">{{ stock.symbol }}</a>
-                            {% else %}
-                                {{ stock.ticker|default:"N/A" }}
-                            {% endif %}
-                        </td>
-                        <td>{{ stock.company_name|default:"N/A" }}</td>
-                        <td>{{ stock.industry|default:"N/A" }}</td>
-                        <td>{{ stock.current_price|default:"N/A" }}</td>
-                        <td>{{ stock.change|default:"N/A" }}</td>
-                        <td>{{ stock.volume|default:"N/A" }}</td>
-                        <td>
-                            {% if stock.symbol %}
-                                <a href="{% url 'stock_analysis:add_to_watchlist' stock.symbol %}" class="btn btn-sm btn-outline-primary">Thêm vào watchlist</a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8">Không có dữ liệu cổ phiếu.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </form>
-
-    <!-- Phân trang -->
-    {% if is_paginated %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Trước</a></li>
-            {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-            <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
-            {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Sau</a></li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-</div>
-
-{% endblock content %}
-
-
-
-{% block javascripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const compareCheckboxes = document.querySelectorAll('.compare-checkbox');
-    const compareButton = document.getElementById('compareButton');
-
-    compareCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateCompareButton);
-    });
-
-    function updateCompareButton() {
-        const checkedBoxes = document.querySelectorAll('.compare-checkbox:checked');
-        compareButton.disabled = checkedBoxes.length < 2 || checkedBoxes.length > 5;
-    }
-});
-</script>
-{% endblock javascripts %}
-
-
-
+{% extends "layouts/base.html" %}
+
+{% block title %} Stock List {% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Stock List</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Symbol</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Name</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Exchange</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Current Price</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in stocks %}
+                                <tr>
+                                    <td>{{ stock.symbol }}</td>
+                                    <td>{{ stock.name }}</td>
+                                    <td>{{ stock.exchange }}</td>
+                                    <td>{{ stock.current_price }}</td>
+                                    <td>
+                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+    // Thêm c��c script JavaScript cần thiết ở đây
+</script>
+{% endblock javascripts %}
+

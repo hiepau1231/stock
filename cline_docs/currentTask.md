@@ -1,58 +1,44 @@
 # Nhiệm Vụ Hiện Tại
 
-## Mục Tiêu
-Chuyển đổi hệ thống từ sử dụng thư viện vnquant sang Alpha Vantage API để lấy dữ liệu chứng khoán, và cải thiện chức năng cũng như hiệu suất của ứng dụng phân tích chứng khoán.
+## Đã hoàn thành
+- ✅ Chuyển đổi từ vnstock3 sang yfinance để lấy dữ liệu chứng khoán
+- ✅ Cập nhật StockService để sử dụng yfinance API
+- ✅ Cập nhật và sửa lỗi tất cả tests trong apps.stock_analysis
+- ✅ Thêm caching để tối ưu hiệu suất
+- ✅ Thêm logging chi tiết
 
-## Bối Cảnh
-Chúng ta đã quyết định không sử dụng vnquant và thay vào đó sẽ sử dụng Alpha Vantage API (https://www.alphavantage.co/documentation/) để lấy dữ liệu chứng khoán.
+## Cần làm tiếp
+1. Xử lý lỗi trong predictions app:
+   - Tạo models cần thiết trong predictions/models.py
+   - Hoặc tạm thời disable tests của predictions app
 
-## Các Bước Tiếp Theo
+2. Tối ưu hóa hiệu suất:
+   - Kiểm tra và tối ưu các background tasks
+   - Tối ưu hóa các truy vấn database
+   - Thêm indexes nếu cần thiết
 
-1. Đăng ký và lấy API key từ Alpha Vantage:
-   - Truy cập https://www.alphavantage.co/ và đăng ký tài khoản.
-   - Lấy API key và lưu trữ an toàn.
+3. Cải thiện giao diện người dùng:
+   - Thêm biểu đồ cho dữ liệu cổ phiếu
+   - Cải thiện responsive design
+   - Thêm loading indicators
 
-2. Cài đặt thư viện requests:
-   - Thêm requests vào file requirements.txt.
-   - Cài đặt requests trong môi trường phát triển.
+4. Thêm tính năng mới:
+   - Hoàn thiện chức năng so sánh cổ phiếu
+   - Thêm tính năng cảnh báo giá
+   - Thêm tính năng xuất báo cáo
 
-3. Cập nhật StockService:
-   - Thay thế tất cả các cuộc gọi API từ vnquant bằng các cuộc gọi tới Alpha Vantage API.
-   - Cập nhật xử lý dữ liệu để phù hợp với định dạng mới từ Alpha Vantage.
-   - Thêm xử lý giới hạn tốc độ API (rate limiting) để tuân thủ giới hạn của Alpha Vantage.
-
-4. Cập nhật scrape_stock_data command:
-   - Điều chỉnh logic crawl dữ liệu để sử dụng Alpha Vantage API thay vì vnquant.
-
-5. Kiểm tra và cập nhật các view:
-   - Đảm bảo rằng tất cả các view đang sử dụng dữ liệu từ StockService một cách chính xác.
-
-6. Cập nhật unit tests:
-   - Cập nhật các test case để phản ánh việc sử dụng Alpha Vantage API.
-
-7. Xử lý lỗi và logging:
-   - Cập nhật hệ thống xử lý lỗi để phù hợp với các exception có thể xảy ra khi sử dụng Alpha Vantage API.
-   - Đảm bảo logging đầy đủ cho quá trình lấy dữ liệu mới.
-
-8. Cập nhật tài liệu:
-   - Cập nhật README.md và các tài liệu liên quan để phản ánh việc sử dụng Alpha Vantage API.
-
-9. Tối ưu hóa hiệu suất:
-   - Kiểm tra và tối ưu hóa các truy vấn dữ liệu sử dụng Alpha Vantage API.
-   - Cập nhật cơ chế cache để giảm số lượng cuộc gọi API không cần thiết.
-
-10. Kiểm thử tích hợp:
-    - Chạy kiểm thử toàn diện để đảm bảo tất cả các chức năng vẫn hoạt động chính xác với dữ liệu mới.
-
-11. Triển khai:
-    - Cập nhật môi trường production với các thay đổi mới.
-    - Theo dõi hiệu suất và độ ổn định của hệ thống sau khi chuyển đổi.
+5. Cập nhật Documentation:
+   - Cập nhật README.md với hướng dẫn sử dụng yfinance
+   - Thêm tài liệu API
+   - Thêm hướng dẫn deployment
 
 ## Ưu tiên
-Ưu tiên cao nhất là đảm bảo tính liên tục của dữ liệu và chức năng của ứng dụng. Tập trung vào việc cập nhật StockService và scrape_stock_data command trước tiên.
+1. Xử lý lỗi trong predictions app
+2. Tối ưu hiệu suất
+3. Cải thiện UI/UX
+4. Thêm tính năng mới
 
 ## Lưu ý
-- Đảm bảo bảo mật API key của Alpha Vantage.
-- Tuân thủ các giới hạn tốc độ và điều khoản sử dụng của Alpha Vantage API.
-- Cần cẩn thận trong việc xử lý dữ liệu lịch sử đã được lưu trữ từ nguồn cũ.
-- Theo dõi chặt chẽ hiệu suất của hệ thống sau khi chuyển đổi để đảm bảo không có sự suy giảm đáng kể.
+- Theo dõi giới hạn request của yfinance API
+- Thêm error handling cho các trường hợp API không phản hồi
+- Cân nhắc việc cache dữ liệu offline cho các mã giao dịch phổ biến

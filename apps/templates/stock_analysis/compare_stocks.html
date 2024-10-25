@@ -1,0 +1,39 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2>Compare Stocks</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="symbols">Enter stock symbols (comma-separated):</label>
+            <input type="text" class="form-control" id="symbols" name="symbols" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Compare</button>
+    </form>
+
+    {% if comparison_data %}
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>Change</th>
+                <th>Change %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in comparison_data %}
+            <tr>
+                <td>{{ stock.symbol }}</td>
+                <td>{{ stock.price }}</td>
+                <td>{{ stock.change }}</td>
+                <td>{{ stock.change_percent }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}
+
