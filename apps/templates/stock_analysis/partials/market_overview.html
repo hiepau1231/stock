@@ -1,0 +1,39 @@
+<div class="col-xl-12 mb-4">
+    <div class="card shadow h-100">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Tổng Quan Thị Trường</h6>
+            <div class="text-{% if market_overview.market_status == 'open' %}success{% else %}danger{% endif %}">
+                {% if market_overview.market_status == 'open' %}
+                    Đang Giao Dịch
+                {% else %}
+                    Đóng Cửa
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for index_name, index_data in market_overview.indices.items %}
+                <div class="col-md-3 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        {{ index_name }}
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ index_data.price|floatformat:2 }}
+                                    </div>
+                                    <div class="text-{% if index_data.change >= 0 %}success{% else %}danger{% endif %}">
+                                        {{ index_data.change|floatformat:2 }} ({{ index_data.percent_change|floatformat:2 }}%)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

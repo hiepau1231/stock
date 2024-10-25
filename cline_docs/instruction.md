@@ -239,6 +239,12 @@ stock_analysis_project/
 │   │   ├── forms.py
 │   │   ├── services/
 │   │   │   └── stock_service.py
+│   │   ├── utils/
+│   │   │   └── performance.py
+│   │   ├── management/
+│   │   │   ├── __init__.py
+│   │   │   └── commands/
+│   │   │       └── __init__.py
 │   │   └── templates/
 │   │       └── stock_analysis/
 │   │           ├── dashboard.html
@@ -248,16 +254,22 @@ stock_analysis_project/
 │   │           ├── portfolio_detail.html
 │   │           ├── portfolio_create.html
 │   │           ├── compare.html
-│   │           └── stock_comparison.html
+│   │           ├── stock_comparison.html
+│   │           ├── watchlist.html
+│   │           └── partials/
+│   │               └── detailed_analysis.html
 │   ├── predictions/
 │   │   └── models.py
-│   └── authentication/
+│   ├── authentication/
+│   └── home/
+│       └── views.py
 ├── templates/
 │   ├── base.html
 │   ├── home/
 │   │   └── dashboard.html
 │   └── stock_analysis/
-│       └── error.html
+│       ├── error.html
+│       └── stock_detail.html
 ├── static/
 │   └── assets/
 │       └── vendor/
@@ -266,7 +278,8 @@ stock_analysis_project/
 │                   └── vi.js
 ├── cline_docs/
 │   ├── currentTask.md
-│   └── instruction.md
+│   ├── instruction.md
+│   └── currenterror.md
 ├── requirements.txt
 ├── README.md
 └── test_vnstock.py

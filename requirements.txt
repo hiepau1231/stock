@@ -35,3 +35,6 @@ typing_extensions==4.9.0
 tzdata==2024.1
 psutil==6.0.0
 lxml>=4.9.0
+
+# Thêm dòng sau vào cuối file requirements.txt
+fireant

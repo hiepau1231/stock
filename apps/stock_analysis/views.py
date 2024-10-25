@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 
 from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator  # Thêm dòng này
 from .utils.performance import query_debugger, optimize_queryset
 
 
@@ -59,9 +60,7 @@ class DashboardView(LoginRequiredMixin, View):
 
             
 
-            top_gainers = stock_service.get_top_gainers()
-
-            top_losers = stock_service.get_top_losers()
+            top_movers = stock_service.get_top_movers(limit=5)
 
             
 
@@ -69,9 +68,9 @@ class DashboardView(LoginRequiredMixin, View):
 
                 'market_overview': market_overview,
 
-                'top_gainers': top_gainers[:5] if top_gainers else [],
+                'top_gainers': top_movers['top_gainers'] if top_movers else [],
 
-                'top_losers': top_losers[:5] if top_losers else [],
+                'top_losers': top_movers['top_losers'] if top_movers else [],
 
             }
 
@@ -88,23 +87,20 @@ class DashboardView(LoginRequiredMixin, View):
 
 
 class StockListView(ListView):
-
     model = Stock
-
     template_name = 'stock_analysis/stock_list.html'
-
     context_object_name = 'stocks'
 
-    @cache_page(60 * 15)  # Cache trong 15 phút
-    @query_debugger
-    def get(self, request):
-        # Bỏ select_related vì Stock model không có foreign key
-        stocks = optimize_queryset(
+    @method_decorator(cache_page(60 * 15))  # Cache trong 15 phút
+    @method_decorator(query_debugger)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        return optimize_queryset(
             Stock.objects.all(),
             prefetch_related=['historical_data']
         )
-        context = {'stocks': stocks}
-        return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -116,25 +112,12 @@ class StockListView(ListView):
 @login_required
 
 def dashboard(request):
-
-    market_overview = stock_service.get_market_overview()
-
-    top_gainers = stock_service.get_top_gainers()
-
-    top_losers = stock_service.get_top_losers()
-
+    stock_service = StockService()
+    top_movers = stock_service.get_top_movers(limit=5)
     
-
     context = {
-
-        'market_overview': market_overview,
-
-        'top_gainers': top_gainers,
-
-        'top_losers': top_losers,
-
+        'top_movers': top_movers if top_movers else {'top_gainers': [], 'top_losers': []}
     }
-
     return render(request, 'stock_analysis/dashboard.html', context)
 
 
@@ -489,6 +472,10 @@ def get_technical_indicators(request, symbol):
             return JsonResponse({'error': str(e)}, status=404)
         # Các lỗi khác trả về 400
         return JsonResponse({'error': str(e)}, status=400)
+
+
+
+
 
 
 

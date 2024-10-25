@@ -1,0 +1,39 @@
+{% load humanize %}
+
+<div class="col-xl-12 mb-4">
+    <div class="card shadow h-100">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Cổ Phiếu Nổi Bật</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã CP</th>
+                            <th>Giá</th>
+                            <th>Thay Đổi</th>
+                            <th>Khối Lượng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in trending_stocks %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">
+                                    {{ stock.symbol }}
+                                </a>
+                            </td>
+                            <td>{{ stock.price|floatformat:2 }}</td>
+                            <td class="text-{% if stock.change >= 0 %}success{% else %}danger{% endif %}">
+                                {{ stock.change|floatformat:2 }} ({{ stock.percent_change|floatformat:2 }}%)
+                            </td>
+                            <td>{{ stock.volume|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

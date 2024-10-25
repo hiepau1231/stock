@@ -1,0 +1,75 @@
+<div class="row">
+    <!-- Top Gainers -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <h6 class="card-title text-success">Top Tăng Giá</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Mã CP</th>
+                                <th>Giá</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in top_gainers %}
+                            <tr>
+                                <td>{{ stock.symbol }}</td>
+                                <td>{{ stock.price|floatformat:2 }}</td>
+                                <td class="text-success">+{{ stock.percent_change|floatformat:2 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Losers -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <h6 class="card-title text-danger">Top Giảm Giá</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Mã CP</th>
+                                <th>Giá</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in top_losers %}
+                            <tr>
+                                <td>{{ stock.symbol }}</td>
+                                <td>{{ stock.price|floatformat:2 }}</td>
+                                <td class="text-danger">{{ stock.percent_change|floatformat:2 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Breadth -->
+    <div class="col-xl-4 col-md-12 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <h6 class="card-title text-info">Độ Rộng Thị Trường</h6>
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success mb-1">Tăng: {{ market_breadth.advancing }}</div>
+                        <div class="text-xs font-weight-bold text-danger mb-1">Giảm: {{ market_breadth.declining }}</div>
+                        <div class="text-xs font-weight-bold text-warning mb-1">Đứng giá: {{ market_breadth.unchanged }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
