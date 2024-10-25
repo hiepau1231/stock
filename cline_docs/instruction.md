@@ -230,37 +230,25 @@ stock_analysis_project/
 ├── apps/
 │   ├── stock_analysis/
 │   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── apps.py
 │   │   ├── models.py
-│   │   ├── tests.py
-│   │   ├── urls.py
 │   │   ├── views.py
-│   │   ├── forms.py
+│   │   ├── urls.py
 │   │   ├── services/
 │   │   │   └── stock_service.py
-│   │   ├── utils/
-│   │   │   └── performance.py
+│   │   ├── templatetags/
 │   │   ├── management/
 │   │   │   ├── __init__.py
 │   │   │   └── commands/
-│   │   │       └── __init__.py
-│   │   └── templates/
-│   │       └── stock_analysis/
-│   │           ├── dashboard.html
-│   │           ├── stock_list.html
-│   │           ├── stock_detail.html
-│   │           ├── portfolio_list.html
-│   │           ├── portfolio_detail.html
-│   │           ├── portfolio_create.html
-│   │           ├── compare.html
-│   │           ├── stock_comparison.html
-│   │           ├── watchlist.html
-│   │           └── partials/
-│   │               └── detailed_analysis.html
+│   │   │       ├── __init__.py
+│   │   │       ├── create_sample_data.py
+│   │   │       └── scrape_stock_data.py
+│   │   ├── utils/
+│   │   │   └── performance.py
+│   │   ├── middleware/
+│   │   └── tests.py
+│   ├── authentication/
 │   ├── predictions/
 │   │   └── models.py
-│   ├── authentication/
 │   └── home/
 │       └── views.py
 ├── templates/
@@ -268,8 +256,16 @@ stock_analysis_project/
 │   ├── home/
 │   │   └── dashboard.html
 │   └── stock_analysis/
+│       ├── dashboard.html
+│       ├── stock_list.html
+│       ├── stock_detail.html
+│       ├── portfolio_list.html
+│       ├── portfolio_detail.html
+│       ├── portfolio_create.html
+│       ├── stock_comparison.html
 │       ├── error.html
-│       └── stock_detail.html
+│       └── partials/
+│           └── market_overview.html
 ├── static/
 │   └── assets/
 │       └── vendor/
