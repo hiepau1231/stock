@@ -1,39 +1,54 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "layouts/base.html" %}
+{% load humanize %}
 
-{% block title %} Danh sách theo dõi {% endblock %}
+{% block title %}Danh sách theo dõi{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Danh sách theo dõi của bạn</h1>
+<div class="container-fluid py-4">
+    <h1>Danh sách theo dõi</h1>
     
-    {% if watchlist %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Mã cổ phiếu</th>
-                    <th>Tên công ty</th>
-                    <th>Giá hiện tại</th>
-                    <th>Thay đổi</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in watchlist %}
-                <tr>
-                    <td><a href="{% url 'stock_analysis:stock_detail' item.stock.symbol %}">{{ item.stock.symbol }}</a></td>
-                    <td>{{ item.stock.company_name }}</td>
-                    <td>{{ item.stock.current_price }}</td>
-                    <td>{{ item.stock.change }}</td>
-                    <td>
-                        <a href="{% url 'stock_analysis:remove_from_watchlist' item.stock.symbol %}" class="btn btn-danger btn-sm">Xóa</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Bạn chưa có cổ phiếu nào trong danh sách theo dõi.</p>
-    {% endif %}
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã cổ phiếu</th>
+                        <th>Tên công ty</th>
+                        <th>Giá hiện tại</th>
+                        <th>Thay đổi</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'stock_analysis:stock_detail' symbol=stock.symbol %}">
+                                {{ stock.symbol }}
+                            </a>
+                        </td>
+                        <td>{{ stock.name }}</td>
+                        <td>{{ stock.current_price|floatformat:2|intcomma }}</td>
+                        <td class="{% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% endif %}">
+                            {{ stock.change|floatformat:2 }}%
+                        </td>
+                        <td>
+                            <a href="{% url 'stock_analysis:remove_from_watchlist' symbol=stock.symbol %}" 
+                               class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            Chưa có cổ phiếu nào trong danh sách theo dõi
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

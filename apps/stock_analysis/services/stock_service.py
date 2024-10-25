@@ -185,4 +185,52 @@ class StockService:
         logger.info(f"Updated {updated_count} out of {len(stocks)} stocks")
         return updated_count
 
+    def get_stock_historical_data(self, symbol, days=30):
+        try:
+            stock = Stock.objects.get(symbol=symbol)
+            historical_data = HistoricalData.objects.filter(
+                stock=stock
+            ).order_by('-date')[:days]
+            
+            if not historical_data.exists():
+                # Nếu không có dữ liệu trong database, thử lấy từ yfinance
+                end_date = timezone.now().date()
+                start_date = end_date - timedelta(days=days)
+                
+                ticker = yf.Ticker(f"{symbol}.VN")
+                df = ticker.history(start=start_date, end=end_date)
+                
+                # Lưu dữ liệu vào database
+                for index, row in df.iterrows():
+                    historical_data = HistoricalData.objects.create(
+                        stock=stock,
+                        date=index.date(),
+                        open_price=float(row['Open']),
+                        high_price=float(row['High']),
+                        low_price=float(row['Low']),
+                        close_price=float(row['Close']),
+                        volume=int(row['Volume'])
+                    )
+                
+                # Lấy lại dữ liệu từ database
+                historical_data = HistoricalData.objects.filter(
+                    stock=stock
+                ).order_by('-date')[:days]
+            
+            return [
+                {
+                    'date': data.date.strftime('%Y-%m-%d'),
+                    'open': float(data.open_price),
+                    'high': float(data.high_price),
+                    'low': float(data.low_price),
+                    'close': float(data.close_price),
+                    'volume': int(data.volume),
+                    'change': ((data.close_price - data.open_price) / data.open_price) * 100
+                }
+                for data in historical_data
+            ]
+        except Exception as e:
+            logger.error(f"Error fetching historical data for {symbol}: {str(e)}")
+            return []
+
     # Bạn có thể thêm các phương thức khác nếu cần

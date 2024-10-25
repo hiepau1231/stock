@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+{% load humanize %}
+
+{% block title %}Cảnh báo giá{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="alerts-header">
+        <h1>Cảnh báo giá</h1>
+    </div>
+
+    <div class="alerts-list">
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Mã CP</th>
+                            <th>Loại cảnh báo</th>
+                            <th>Ngưỡng giá</th>
+                            <th>Giá hiện tại</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in alerts %}
+                        <tr>
+                            <td>{{ alert.stock.symbol }}</td>
+                            <td>{{ alert.get_alert_type_display }}</td>
+                            <td>{{ alert.price_threshold|floatformat:2|intcomma }}</td>
+                            <td>{{ alert.stock.current_price|floatformat:2|intcomma }}</td>
+                            <td>
+                                {% if alert.is_active %}
+                                    <span class="badge bg-success">Đang hoạt động</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Đã tắt</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'stock_analysis:remove_price_alert' alert.id %}" 
+                                   class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Chưa có cảnh báo giá nào</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,72 +1,120 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "layouts/base.html" %}
+{% load humanize %}
 
 {% block title %}{{ portfolio.name }} - Chi tiết danh mục{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">{{ portfolio.name }}</h1>
-    
-    <h3>Tổng giá trị: ${{ total_value|floatformat:2 }}</h3>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Mã cổ phiếu</th>
-                <th>Số lượng</th>
-                <th>Giá mua</th>
-                <th>Giá hiện tại</th>
-                <th>Giá trị</th>
-                <th>Lợi nhuận/Lỗ</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td>{{ item.stock.symbol }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>${{ item.purchase_price|floatformat:2 }}</td>
-                <td>${{ item.stock.current_price|floatformat:2 }}</td>
-                <td>${{ item.quantity|multiply:item.stock.current_price|floatformat:2 }}</td>
-                <td>
-                    {% with profit_loss=item.quantity|multiply:item.stock.current_price|subtract:item.quantity|multiply:item.purchase_price %}
-                    ${{ profit_loss|floatformat:2 }}
-                    {% if profit_loss > 0 %}
-                    <span class="text-success">(+{{ profit_loss|divide:item.quantity|multiply:item.purchase_price|multiply:100|floatformat:2 }}%)</span>
-                    {% elif profit_loss < 0 %}
-                    <span class="text-danger">({{ profit_loss|divide:item.quantity|multiply:item.purchase_price|multiply:100|floatformat:2 }}%)</span>
-                    {% endif %}
-                    {% endwith %}
-                </td>
-                <td>
-                    <a href="{% url 'stock_analysis:remove_portfolio_stock' portfolio.id item.stock.id %}" class="btn btn-danger btn-sm">Xóa</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <h3 class="mt-4">Thêm cổ phiếu mới</h3>
-    <form method="post" action="{% url 'stock_analysis:add_portfolio_stock' portfolio.id %}">
-        {% csrf_token %}
-        <div class="form-row">
-            <div class="col">
-                <input type="text" name="symbol" class="form-control" placeholder="Mã cổ phiếu" required>
+<div class="container-fluid py-4">
+    <div class="portfolio-header">
+        <h1>{{ portfolio.name }}</h1>
+        <div class="portfolio-summary">
+            <div class="summary-card">
+                <h5>Tổng giá trị hiện tại</h5>
+                <h3>{{ total_current_value|floatformat:2|intcomma }} VND</h3>
             </div>
-            <div class="col">
-                <input type="number" name="quantity" class="form-control" placeholder="Số lượng" required>
-            </div>
-            <div class="col">
-                <input type="number" step="0.01" name="purchase_price" class="form-control" placeholder="Giá mua" required>
-            </div>
-            <div class="col">
-                <input type="date" name="purchase_date" class="form-control" required>
-            </div>
-            <div class="col">
-                <button type="submit" class="btn btn-primary">Thêm</button>
+            <div class="summary-card">
+                <h5>Lợi nhuận/Lỗ</h5>
+                <h3 class="{% if total_profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ total_profit_loss|floatformat:2|intcomma }} VND
+                    ({{ profit_loss_percentage|floatformat:2 }}%)
+                </h3>
             </div>
         </div>
-    </form>
+    </div>
+
+    <div class="actions mb-4">
+        <div class="btn-group">
+            <a href="{% url 'stock_analysis:export_portfolio_pdf' portfolio.id %}" 
+               class="btn btn-primary">
+                <i class="fas fa-file-pdf"></i> Xuất PDF
+            </a>
+            <a href="{% url 'stock_analysis:export_portfolio_excel' portfolio.id %}" 
+               class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Xuất Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="portfolio-items">
+        <h2>Danh mục đầu tư</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Mã CP</th>
+                    <th>Số lượng</th>
+                    <th>Giá mua</th>
+                    <th>Giá hiện tại</th>
+                    <th>Tổng giá trị</th>
+                    <th>Lợi nhuận/Lỗ</th>
+                    <th>%</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.stock.symbol }}</td>
+                    <td>{{ item.quantity|intcomma }}</td>
+                    <td>{{ item.purchase_price|floatformat:2|intcomma }}</td>
+                    <td>{{ item.stock.current_price|floatformat:2|intcomma }}</td>
+                    <td>{{ item.current_value|floatformat:2|intcomma }}</td>
+                    <td class="{% if item.profit_loss > 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ item.profit_loss|floatformat:2|intcomma }}
+                    </td>
+                    <td class="{% if item.profit_loss_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ item.profit_loss_percentage|floatformat:2 }}%
+                    </td>
+                    <td>
+                        <a href="{% url 'stock_analysis:remove_portfolio_stock' portfolio.id item.stock.id %}" 
+                           class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="performance-chart">
+        <h2>Hiệu suất danh mục</h2>
+        <div id="performance-chart"></div>
+    </div>
+
+    <!-- Thêm biểu đồ phân tích danh mục -->
+    {% if portfolio_charts %}
+    <div class="portfolio-analysis mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Phân tích danh mục</h3>
+                {{ portfolio_charts|safe }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block javascripts %}
+{{ block.super }}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+// Tạo biểu đồ hiệu suất
+const performanceData = {{ performance_data|safe }};
+const trace = {
+    x: performanceData.daily.map(d => d.date),
+    y: performanceData.daily.map(d => d.value),
+    type: 'scatter',
+    mode: 'lines',
+    name: 'Giá trị danh mục'
+};
+
+const layout = {
+    title: 'Hiệu suất danh mục theo thời gian',
+    xaxis: {title: 'Ngày'},
+    yaxis: {title: 'Giá trị (VND)'}
+};
+
+Plotly.newPlot('performance-chart', [trace], layout);
+</script>
 {% endblock %}

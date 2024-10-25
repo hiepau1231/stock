@@ -1,125 +1,209 @@
 {% extends "layouts/base.html" %}
 {% load humanize %}
 
-{% block title %} {{ stock.symbol }} - Chi tiết {% endblock %}
+{% block title %} {{ stock.symbol }} - Chi tiết cổ phiếu {% endblock %}
 
 {% block stylesheets %}
-<!-- Thêm CSS cho TradingView widget -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tradingview-widget/1.0.0/css/tradingview-widget.min.css">
-<!-- Thêm CSS cho loading indicator -->
+{{ block.super }}
 <style>
-.loading {
-    position: relative;
-    height: 200px;
-}
-.loading:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    transform: translate(-50%, -50%);
-}
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
+    .stock-header {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .price-info {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .price-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .chart-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .indicators-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .indicator-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .positive-change {
+        color: #28a745;
+    }
+
+    .negative-change {
+        color: #dc3545;
+    }
+
+    .loading {
+        position: relative;
+        min-height: 200px;
+    }
+
+    .loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+        .price-info {
+            flex-direction: column;
+        }
+        
+        .price-card {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock stylesheets %}
 
 {% block content %}
-<div class="container-fluid mt--6">
-    <!-- Thông tin cơ bản -->
-    <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h3 class="mb-0">{{ stock.symbol }} - {{ stock.name }}</h3>
-                        </div>
-                        <div class="col text-right">
-                            <span class="h2 font-weight-bold mb-0 {% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% endif %}">
-                                {{ stock.current_price|floatformat:2|intcomma }}
-                                <small>({{ stock.percent_change|floatformat:2 }}%)</small>
-                            </span>
-                        </div>
-                    </div>
-                </div>
+<div class="container-fluid py-4">
+    <div class="stock-header">
+        <h1>{{ stock.symbol }} - {{ stock.name }}</h1>
+        <div class="price-info">
+            <div class="price-card">
+                <h5>Giá hiện tại</h5>
+                <h3>{{ latest_price|floatformat:2|intcomma }}</h3>
+                <p class="{% if latest_change > 0 %}positive-change{% elif latest_change < 0 %}negative-change{% endif %}">
+                    {{ latest_change|floatformat:2 }}%
+                </p>
+            </div>
+            <div class="price-card">
+                <h5>Khối lượng</h5>
+                <h3>{{ latest_volume|intcomma }}</h3>
+                <p>Cập nhật: {{ latest_date }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Biểu đồ và chỉ báo -->
-    <div class="row mt-4">
-        <div class="col-xl-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="mb-0">Biểu đồ giá</h3>
+    <div class="chart-container">
+        <h2>Biểu đồ giá</h2>
+        <div id="candlestick-chart" class="loading">
+            {% if candlestick_chart %}
+                {{ candlestick_chart|safe }}
+            {% else %}
+                <div class="alert alert-warning">
+                    Không có dữ liệu biểu đồ cho mã {{ stock.symbol }}
                 </div>
-                <div class="card-body">
-                    <!-- TradingView Widget BEGIN -->
-                    <div class="tradingview-widget-container">
-                        <div id="tradingview_chart"></div>
-                    </div>
-                    <!-- TradingView Widget END -->
-                </div>
-            </div>
+            {% endif %}
         </div>
-        <div class="col-xl-4">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="mb-0">Chỉ báo kỹ thuật</h3>
-                </div>
-                <div class="card-body">
-                    <div id="technical_indicators" class="loading">
-                        <!-- Indicators will be loaded here -->
-                    </div>
-                </div>
+    </div>
+
+    <div class="indicators-grid">
+        <div class="indicator-card">
+            <h4>RSI (14)</h4>
+            <h3 class="{% if rsi > 70 %}negative-change{% elif rsi < 30 %}positive-change{% endif %}">
+                {{ rsi|floatformat:2 }}
+            </h3>
+            <p>
+                {% if rsi > 70 %}
+                    Quá mua
+                {% elif rsi < 30 %}
+                    Quá bán
+                {% else %}
+                    Trung tính
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="indicator-card">
+            <h4>MACD</h4>
+            <h3 class="{% if macd > 0 %}positive-change{% else %}negative-change{% endif %}">
+                {{ macd|floatformat:2 }}
+            </h3>
+            <p>Signal: {{ signal|floatformat:2 }}</p>
+        </div>
+
+        <div class="indicator-card">
+            <h4>Bollinger Bands</h4>
+            <p>Upper: {{ bb_upper|floatformat:2|intcomma }}</p>
+            <p>Middle: {{ bb_middle|floatformat:2|intcomma }}</p>
+            <p>Lower: {{ bb_lower|floatformat:2|intcomma }}</p>
+        </div>
+    </div>
+
+    <div class="actions-container">
+        <div class="row">
+            <div class="col-md-6">
+                <a href="{% url 'stock_analysis:add_to_watchlist' stock.symbol %}" class="btn btn-primary">
+                    <i class="fas fa-star"></i> Thêm vào danh sách theo dõi
+                </a>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#priceAlertModal">
+                    <i class="fas fa-bell"></i> Tạo cảnh báo giá
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Dữ liệu lịch sử -->
-    <div class="row mt-4">
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="mb-0">Lịch sử giao dịch</h3>
+    <!-- Thêm modal tạo cảnh báo giá -->
+    <div class="modal fade" id="priceAlertModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tạo cảnh báo giá cho {{ stock.symbol }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table align-items-center table-flush">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Ngày</th>
-                                    <th>Giá mở cửa</th>
-                                    <th>Giá cao nhất</th>
-                                    <th>Giá thấp nhất</th>
-                                    <th>Giá đóng cửa</th>
-                                    <th>Khối lượng</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for data in historical_data %}
-                                <tr>
-                                    <td>{{ data.date|date:"d/m/Y" }}</td>
-                                    <td>{{ data.open_price|floatformat:2|intcomma }}</td>
-                                    <td>{{ data.high_price|floatformat:2|intcomma }}</td>
-                                    <td>{{ data.low_price|floatformat:2|intcomma }}</td>
-                                    <td>{{ data.close_price|floatformat:2|intcomma }}</td>
-                                    <td>{{ data.volume|intcomma }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <form method="post" action="{% url 'stock_analysis:add_price_alert' stock.symbol %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Loại cảnh báo</label>
+                            <select name="alert_type" class="form-select" required>
+                                <option value="above">Giá vượt trên</option>
+                                <option value="below">Giá xuống dưới</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ngưỡng giá</label>
+                            <input type="number" name="price_threshold" class="form-control" 
+                                   step="0.01" value="{{ latest_price }}" required>
+                        </div>
                     </div>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Tạo cảnh báo</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -127,62 +211,27 @@
 {% endblock content %}
 
 {% block javascripts %}
-<!-- TradingView Widget -->
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+{{ block.super }}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
-new TradingView.widget({
-    "width": "100%",
-    "height": 500,
-    "symbol": "{{ stock.symbol }}",
-    "interval": "D",
-    "timezone": "Asia/Ho_Chi_Minh",
-    "theme": "light",
-    "style": "1",
-    "locale": "vi_VN",
-    "toolbar_bg": "#f1f3f6",
-    "enable_publishing": false,
-    "hide_side_toolbar": false,
-    "allow_symbol_change": true,
-    "studies": [
-        "RSI@tv-basicstudies",
-        "MASimple@tv-basicstudies",
-        "MACD@tv-basicstudies",
-        "StochasticRSI@tv-basicstudies"
-    ],
-    "container_id": "tradingview_chart"
+document.addEventListener('DOMContentLoaded', function() {
+    const chartContainer = document.getElementById('candlestick-chart');
+    
+    // Xóa class loading nếu đã có dữ liệu
+    if (chartContainer.querySelector('.js-plotly-plot')) {
+        chartContainer.classList.remove('loading');
+    }
+    
+    // Thêm xử lý resize cho biểu đồ
+    function resizePlot() {
+        const plots = document.getElementsByClassName('js-plotly-plot');
+        for (let plot of plots) {
+            Plotly.Plots.resize(plot);
+        }
+    }
+
+    // Resize khi cửa sổ thay đổi kích thước
+    window.addEventListener('resize', resizePlot);
 });
-
-// Load technical indicators
-function loadTechnicalIndicators() {
-    fetch(`/api/stock/{{ stock.symbol }}/indicators/`)
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('technical_indicators');
-            container.classList.remove('loading');
-            container.innerHTML = `
-                <div class="indicator-group">
-                    <h4>RSI (14)</h4>
-                    <p class="${data.rsi > 70 ? 'text-danger' : data.rsi < 30 ? 'text-success' : ''}">${data.rsi.toFixed(2)}</p>
-                </div>
-                <div class="indicator-group">
-                    <h4>MACD</h4>
-                    <p class="${data.macd > 0 ? 'text-success' : 'text-danger'}">${data.macd.toFixed(2)}</p>
-                </div>
-                <div class="indicator-group">
-                    <h4>Bollinger Bands</h4>
-                    <p>Upper: ${data.bb_upper.toFixed(2)}</p>
-                    <p>Middle: ${data.bb_middle.toFixed(2)}</p>
-                    <p>Lower: ${data.bb_lower.toFixed(2)}</p>
-                </div>
-            `;
-        })
-        .catch(error => {
-            console.error('Error loading indicators:', error);
-            document.getElementById('technical_indicators').innerHTML = 'Error loading indicators';
-        });
-}
-
-// Load indicators when page loads
-document.addEventListener('DOMContentLoaded', loadTechnicalIndicators);
 </script>
 {% endblock javascripts %}

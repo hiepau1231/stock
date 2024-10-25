@@ -38,3 +38,11 @@ lxml>=4.9.0
 
 # Thêm dòng sau vào cuối file requirements.txt
 fireant
+
+# Thêm dependencies mới
+celery==5.3.1
+redis==4.5.4
+
+# Thêm vào cuối file
+reportlab==4.0.4  # Để tạo PDF
+openpyxl==3.1.2  # Để tạo Excel
