@@ -1,86 +1,58 @@
 # Nhiệm Vụ Hiện Tại
 
-
-
 ## Mục Tiêu
-
-Tiếp tục cải thiện chức năng và hiệu suất của ứng dụng phân tích chứng khoán, tập trung vào việc hoàn thiện tích hợp với vnstock và cải thiện trải nghiệm người dùng.
-
-
+Chuyển đổi hệ thống từ sử dụng thư viện vnquant sang Alpha Vantage API để lấy dữ liệu chứng khoán, và cải thiện chức năng cũng như hiệu suất của ứng dụng phân tích chứng khoán.
 
 ## Bối Cảnh
-
-Chúng ta đã hoàn thành việc tích hợp cơ bản vnstock vào dự án và đã cập nhật một số chức năng chính. Hiện tại, cần tập trung vào việc xử lý lỗi, cải thiện hiệu suất và bổ sung thêm tính năng.
-
-
-
-## Các Nhiệm Vụ Đã Hoàn Thành
-
-✅ Cải thiện cấu trúc project
-
-✅ Tích hợp vnstock vào dự án
-
-✅ Cập nhật StockService để sử dụng vnstock
-
-✅ Cập nhật views để xử lý dữ liệu từ vnstock
-
-✅ Thêm biểu đồ cho dữ liệu chứng khoán trong trang chi tiết cổ phiếu
-
-
+Chúng ta đã quyết định không sử dụng vnquant và thay vào đó sẽ sử dụng Alpha Vantage API (https://www.alphavantage.co/documentation/) để lấy dữ liệu chứng khoán.
 
 ## Các Bước Tiếp Theo
 
-1. Hoàn thiện giao diện người dùng:
-   - Đã cải thiện giao diện trang dashboard bằng cách thêm biểu đồ.
-   - Cần tiếp tục tối ưu hóa hiển thị dữ liệu trên dashboard.
-   - Hoàn thiện giao diện cho các trang chi tiết cổ phiếu, danh mục đầu tư và danh sách theo dõi.
+1. Đăng ký và lấy API key từ Alpha Vantage:
+   - Truy cập https://www.alphavantage.co/ và đăng ký tài khoản.
+   - Lấy API key và lưu trữ an toàn.
 
-2. Bổ sung tính năng:
-   - Đã triển khai cơ bản chức năng xem danh sách cổ phiếu, chi tiết cổ phiếu.
-   - Cần triển khai đầy đủ chức năng quản lý danh mục đầu tư (thêm, xóa cổ phiếu).
-   - Cần triển khai chức năng quản lý danh sách theo dõi (thêm, xóa cổ phiếu).
-   - Triển khai chức năng so sánh cổ phiếu.
-   - Thêm các chỉ số phân tích kỹ thuật vào trang chi tiết cổ phiếu.
+2. Cài đặt thư viện requests:
+   - Thêm requests vào file requirements.txt.
+   - Cài đặt requests trong môi trường phát triển.
 
-3. Cải thiện hiệu suất:
-   - Đã triển khai caching trong StockService.
-   - Cần tối ưu hóa truy vấn cơ sở dữ liệu trong các view.
-   - Xem xét sử dụng background tasks cho các tác vụ nặng như cập nhật dữ liệu.
+3. Cập nhật StockService:
+   - Thay thế tất cả các cuộc gọi API từ vnquant bằng các cuộc gọi tới Alpha Vantage API.
+   - Cập nhật xử lý dữ liệu để phù hợp với định dạng mới từ Alpha Vantage.
+   - Thêm xử lý giới hạn tốc độ API (rate limiting) để tuân thủ giới hạn của Alpha Vantage.
 
-4. Xử lý lỗi và nâng cao độ tin cậy:
-   - Đã thêm xử lý lỗi cơ bản cho các cuộc gọi API.
-   - Cần cải thiện thêm việc xử lý lỗi và cung cấp phản hồi phù hợp cho người dùng.
-   - Triển khai logging chi tiết hơn để dễ dàng debug và theo dõi hệ thống.
+4. Cập nhật scrape_stock_data command:
+   - Điều chỉnh logic crawl dữ liệu để sử dụng Alpha Vantage API thay vì vnquant.
 
-5. Testing:
-   - Viết unit tests cho các chức năng mới.
-   - Thực hiện testing tích hợp.
-   - Triển khai automated testing.
+5. Kiểm tra và cập nhật các view:
+   - Đảm bảo rằng tất cả các view đang sử dụng dữ liệu từ StockService một cách chính xác.
 
-6. Documentation:
-   - Cập nhật tài liệu API.
-   - Viết hướng dẫn sử dụng cho người dùng cuối.
-   - Cập nhật README.md với hướng dẫn cài đặt và chạy dự án.
+6. Cập nhật unit tests:
+   - Cập nhật các test case để phản ánh việc sử dụng Alpha Vantage API.
 
-7. Bảo mật:
-   - Rà soát và cải thiện các biện pháp bảo mật.
-   - Triển khai xác thực và phân quyền chi tiết hơn.
+7. Xử lý lỗi và logging:
+   - Cập nhật hệ thống xử lý lỗi để phù hợp với các exception có thể xảy ra khi sử dụng Alpha Vantage API.
+   - Đảm bảo logging đầy đủ cho quá trình lấy dữ liệu mới.
 
-8. Triển khai:
-   - Chuẩn bị môi trường production.
-   - Viết script triển khai tự động.
-   - Thiết lập monitoring và alerting.
+8. Cập nhật tài liệu:
+   - Cập nhật README.md và các tài liệu liên quan để phản ánh việc sử dụng Alpha Vantage API.
 
-Ưu tiên hiện tại là hoàn thiện các tính năng cốt lõi, cải thiện trải nghiệm người dùng và đảm bảo độ tin cậy của hệ thống.
+9. Tối ưu hóa hiệu suất:
+   - Kiểm tra và tối ưu hóa các truy vấn dữ liệu sử dụng Alpha Vantage API.
+   - Cập nhật cơ chế cache để giảm số lượng cuộc gọi API không cần thiết.
 
+10. Kiểm thử tích hợp:
+    - Chạy kiểm thử toàn diện để đảm bảo tất cả các chức năng vẫn hoạt động chính xác với dữ liệu mới.
 
+11. Triển khai:
+    - Cập nhật môi trường production với các thay đổi mới.
+    - Theo dõi hiệu suất và độ ổn định của hệ thống sau khi chuyển đổi.
 
-## Lưu Ý
+## Ưu tiên
+Ưu tiên cao nhất là đảm bảo tính liên tục của dữ liệu và chức năng của ứng dụng. Tập trung vào việc cập nhật StockService và scrape_stock_data command trước tiên.
 
-- Đảm bảo xử lý lỗi đầy đủ khi gọi API vnstock
-
-- Tối ưu hóa số lượng API calls để tránh quá tải
-
-- Cập nhật documentation khi thêm tính năng mới
-
-- Khi chỉnh sửa file, hạn chế tạo quá nhiều khoảng trống không cần thiết để giữ cho code dễ đọc và nhất quán
+## Lưu ý
+- Đảm bảo bảo mật API key của Alpha Vantage.
+- Tuân thủ các giới hạn tốc độ và điều khoản sử dụng của Alpha Vantage API.
+- Cần cẩn thận trong việc xử lý dữ liệu lịch sử đã được lưu trữ từ nguồn cũ.
+- Theo dõi chặt chẽ hiệu suất của hệ thống sau khi chuyển đổi để đảm bảo không có sự suy giảm đáng kể.

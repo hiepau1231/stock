@@ -20,9 +20,8 @@ class MarketIndexAdmin(admin.ModelAdmin):
 
 @admin.register(Stock)
 class StockAdmin(admin.ModelAdmin):
-    list_display = ('symbol', 'company_name', 'exchange', 'industry')
-    search_fields = ('symbol', 'company_name')
-    list_filter = ('exchange', 'industry')
+    list_display = ('symbol', 'name')
+    search_fields = ('symbol', 'name')
 
 @admin.register(StockData)
 class StockDataAdmin(admin.ModelAdmin):
@@ -38,9 +37,9 @@ class WatchListAdmin(admin.ModelAdmin):
 
 @admin.register(StockPrice)
 class StockPriceAdmin(admin.ModelAdmin):
-    list_display = ('stock', 'date', 'open_price', 'close_price', 'volume')
-    search_fields = ('stock__symbol',)
-    list_filter = ('date',)
+    list_display = ('stock', 'date', 'open', 'high', 'low', 'close', 'volume')
+    list_filter = ('stock', 'date')
+    search_fields = ('stock__symbol', 'stock__name')
 
 @admin.register(UserPortfolio)
 class UserPortfolioAdmin(admin.ModelAdmin):

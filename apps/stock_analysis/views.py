@@ -23,98 +23,51 @@ class DashboardView(LoginRequiredMixin, View):
         try:
             stock_service = StockService()
             market_overview = stock_service.get_market_overview()
-            industry_analysis = stock_service.get_industry_analysis()
             top_gainers = stock_service.get_top_gainers()
             top_losers = stock_service.get_top_losers()
             
-            context = self.prepare_dashboard_context(market_overview, industry_analysis, top_gainers, top_losers)
+            context = self.prepare_dashboard_context(market_overview, top_gainers, top_losers)
             return render(request, self.template_name, context)
         except Exception as e:
             logger.error(f"Error in DashboardView: {str(e)}")
             messages.error(request, "An error occurred while loading the dashboard. Please try again later.")
             return render(request, self.template_name, {})
 
-    def prepare_dashboard_context(self, market_overview, industry_analysis, top_gainers, top_losers):
+    def prepare_dashboard_context(self, market_overview, top_gainers, top_losers):
         context = {}
         
-        if market_overview is None or industry_analysis is None:
+        if market_overview is None or market_overview.empty:
             logger.warning("Failed to fetch market data")
             messages.warning(self.request, "Unable to fetch market data. Some information may be missing.")
-        
-        # Prepare data for charts
-        if market_overview is not None and not market_overview.empty:
-            market_overview_labels = json.dumps([item['index_name'] for item in market_overview.to_dict('records')])
-            market_overview_values = json.dumps([item['value'] for item in market_overview.to_dict('records')])
-            context.update({
-                'market_overview': market_overview.to_dict('records'),
-                'market_overview_labels': market_overview_labels,
-                'market_overview_values': market_overview_values,
-            })
-        
-        if industry_analysis is not None and not industry_analysis.empty:
-            industry_analysis_labels = json.dumps([item['industry_name'] for item in industry_analysis.to_dict('records')])
-            industry_analysis_values = json.dumps([item['market_cap'] for item in industry_analysis.to_dict('records')])
-            context.update({
-                'industry_analysis': industry_analysis.to_dict('records'),
-                'industry_analysis_labels': industry_analysis_labels,
-                'industry_analysis_values': industry_analysis_values,
-            })
+            context['market_overview'] = []
+        else:
+            market_overview_data = market_overview.to_dict('records')
+            context['market_overview'] = market_overview_data
+            context['market_overview_labels'] = json.dumps([item['index_name'] for item in market_overview_data])
+            context['market_overview_values'] = json.dumps([item['value'] for item in market_overview_data])
+            context['market_overview_changes'] = json.dumps([item['change'] for item in market_overview_data])
+            context['market_overview_change_percents'] = json.dumps([item['change_percent'] for item in market_overview_data])
         
         context.update({
-            'top_gainers': top_gainers.to_dict('records') if top_gainers is not None else [],
-            'top_losers': top_losers.to_dict('records') if top_losers is not None else [],
+            'top_gainers': top_gainers if top_gainers is not None else [],
+            'top_losers': top_losers if top_losers is not None else [],
         })
         
         return context
 
-class StockListView(LoginRequiredMixin, ListView):
+class StockListView(ListView):
+    model = Stock
     template_name = 'stock_analysis/stock_list.html'
     context_object_name = 'stocks'
-    paginate_by = 20
 
     def get_queryset(self):
-        stock_service = StockService()
-        stock_list = stock_service.get_stock_list()
-        
-        if stock_list is None or (isinstance(stock_list, pd.DataFrame) and stock_list.empty):
-            return []
-
-        # Chuyển đổi DataFrame thành list of dicts
-        stocks = stock_list.to_dict('records')
-
-        # Tìm kiếm
-        search_query = self.request.GET.get('search')
-        if search_query:
-            stocks = [stock for stock in stocks if search_query.lower() in str(stock.get('ticker', '')).lower() or search_query.lower() in str(stock.get('company_name', '')).lower()]
-
-        # Lọc theo ngành
-        industry = self.request.GET.get('industry')
-        if industry:
-            stocks = [stock for stock in stocks if stock.get('industry') == industry]
-
-        # Sắp xếp
-        sort_by = self.request.GET.get('sort', 'ticker')
-        reverse = False
-        if sort_by.startswith('-'):
-            sort_by = sort_by[1:]
-            reverse = True
-        
-        # Sử dụng get() để tránh KeyError và đảm bảo 'symbol' luôn tồn tại
-        stocks = sorted(stocks, key=lambda x: x.get(sort_by, ''), reverse=reverse)
-        
-        # Đảm bảo mỗi stock có trường 'symbol'
-        for stock in stocks:
-            if 'symbol' not in stock:
-                stock['symbol'] = stock.get('ticker', '')  # Sử dụng 'ticker' nếu có, nếu không thì để trống
-
-        return stocks
+        queryset = Stock.objects.all()
+        logger.info(f"Number of stocks retrieved: {queryset.count()}")
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        stock_service = StockService()
-        all_stocks = stock_service.get_stock_list()
-        if all_stocks is not None and not all_stocks.empty:
-            context['industries'] = sorted(all_stocks['industry'].unique())
+        context['segment'] = 'stock_list'
         return context
 
 @login_required

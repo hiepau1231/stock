@@ -230,60 +230,37 @@ stock_analysis_project/
 ├── apps/
 │   └── stock_analysis/
 │       ├── __init__.py
-│       ├── admin.py
 │       ├── models.py
 │       ├── views.py
 │       ├── urls.py
-│       ├── forms.py
 │       ├── services/
-│       │   ├── __init__.py
 │       │   └── stock_service.py
+│       ├── management/
+│       │   └── commands/
+│       │       └── scrape_stock_data.py
 │       └── templatetags/
-│           ├── __init__.py
-│           └── stock_filters.py
 ├── templates/
 │   ├── base.html
-│   ├── includes/
-│   │   └── sidenav.html
-│   ├── home/
-│   │   ├── index.html
-│   │   └── tables.html
 │   └── stock_analysis/
 │       ├── dashboard.html
 │       ├── stock_list.html
-│       ├── stock_detail.html
 │       ├── portfolio_list.html
-│       ├── portfolio_detail.html
-│       ├── portfolio_create.html
-│       ├── watchlist.html
-│       └── update_data.html
+│       └── compare_stocks.html
 ├── static/
-│   ├── css/
-│   │   ├── bootstrap/
-│   │   │   └── bootstrap.css
-│   │   └── argon.css
-│   ├── js/
 │   ├── assets/
+│   │   ├── css/
+│   │   ├── js/
+│   │   ├── img/
 │   │   ├── scss/
 │   │   │   └── core/
-│   │   │       ├── free/
-│   │   │       │   └── list-groups/
-│   │   │       │       └── _list-group.scss
-│   │   │       ├── list-groups/
-│   │   │       │   └── _list-check.scss
-│   │   │       └── tables/
-│   │   │           └── _table-sortable.scss
+│   │   │       └── list-groups/
+│   │   │           ├── _list-check.scss
+│   │   │           └── _list-group.scss
 │   │   └── vendor/
-│   │       ├── bootstrap-datetimepicker.js
 │   │       ├── font-awesome/
 │   │       │   └── HELP-US-OUT.txt
-│   │       ├── jekyll/
-│   │       │   └── Rakefile
-│   │       ├── lavalamp/
-│   │       │   └── lavalamp.jquery.json
 │   │       └── prismjs/
 │   │           └── components.json
-│   └── sitemap.xml
 ├── cline_docs/
 │   ├── instruction.md
 │   └── currentTask.md
