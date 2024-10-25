@@ -20,16 +20,26 @@ class DashboardView(LoginRequiredMixin, View):
     template_name = 'stock_analysis/dashboard.html'
     
     def get(self, request):
-        stock_service = StockService()
-        market_overview = stock_service.get_market_overview()
-        industry_analysis = stock_service.get_industry_analysis()
-        top_gainers = stock_service.get_top_gainers()
-        top_losers = stock_service.get_top_losers()
-        
+        try:
+            stock_service = StockService()
+            market_overview = stock_service.get_market_overview()
+            industry_analysis = stock_service.get_industry_analysis()
+            top_gainers = stock_service.get_top_gainers()
+            top_losers = stock_service.get_top_losers()
+            
+            context = self.prepare_dashboard_context(market_overview, industry_analysis, top_gainers, top_losers)
+            return render(request, self.template_name, context)
+        except Exception as e:
+            logger.error(f"Error in DashboardView: {str(e)}")
+            messages.error(request, "An error occurred while loading the dashboard. Please try again later.")
+            return render(request, self.template_name, {})
+
+    def prepare_dashboard_context(self, market_overview, industry_analysis, top_gainers, top_losers):
         context = {}
         
         if market_overview is None or industry_analysis is None:
-            messages.error(request, "Unable to fetch market data. Please try again later.")
+            logger.warning("Failed to fetch market data")
+            messages.warning(self.request, "Unable to fetch market data. Some information may be missing.")
         
         # Prepare data for charts
         if market_overview is not None and not market_overview.empty:
@@ -55,7 +65,7 @@ class DashboardView(LoginRequiredMixin, View):
             'top_losers': top_losers.to_dict('records') if top_losers is not None else [],
         })
         
-        return render(request, self.template_name, context)
+        return context
 
 class StockListView(LoginRequiredMixin, ListView):
     template_name = 'stock_analysis/stock_list.html'
@@ -147,9 +157,18 @@ class StockDetailView(LoginRequiredMixin, DetailView):
         historical_data = stock_service.get_stock_historical_data(symbol)
         context['historical_data'] = historical_data.to_dict('records') if historical_data is not None else []
         
+        # Chuẩn bị dữ liệu cho biểu đồ
+        if historical_data is not None and not historical_data.empty:
+            context['dates'] = json.dumps(historical_data['date'].tolist())
+            context['prices'] = json.dumps(historical_data['close'].tolist())
+        
         # Lấy dữ liệu intraday
         intraday_data = stock_service.get_stock_intraday(symbol)
         context['intraday_data'] = intraday_data.to_dict('records') if intraday_data is not None else []
+        
+        # Lấy các chỉ số kỹ thuật
+        technical_indicators = stock_service.get_technical_indicators(symbol)
+        context['technical_indicators'] = technical_indicators
         
         return context
 
@@ -181,19 +200,41 @@ class PortfolioDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         return Portfolio.objects.filter(user=self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        portfolio = self.object
+        items = portfolio.portfolioitem_set.all()
+        total_value = sum(item.quantity * item.stock.current_price for item in items)
+        context['items'] = items
+        context['total_value'] = total_value
+        return context
+
 @login_required
 def add_portfolio_stock(request, pk):
     portfolio = get_object_or_404(Portfolio, pk=pk, user=request.user)
     if request.method == 'POST':
-        # Implement logic to add stock to portfolio
-        pass
+        symbol = request.POST.get('symbol')
+        quantity = int(request.POST.get('quantity'))
+        purchase_price = float(request.POST.get('purchase_price'))
+        purchase_date = request.POST.get('purchase_date')
+        
+        stock = get_object_or_404(Stock, symbol=symbol)
+        PortfolioItem.objects.create(
+            portfolio=portfolio,
+            stock=stock,
+            quantity=quantity,
+            purchase_price=purchase_price,
+            purchase_date=purchase_date
+        )
+        messages.success(request, f"{symbol} đã được thêm vào danh mục đầu tư của bạn.")
     return redirect('stock_analysis:portfolio_detail', pk=pk)
 
 @login_required
 def remove_portfolio_stock(request, pk, stock_id):
     portfolio = get_object_or_404(Portfolio, pk=pk, user=request.user)
-    stock = get_object_or_404(Stock, pk=stock_id)
-    PortfolioItem.objects.filter(portfolio=portfolio, stock=stock).delete()
+    item = get_object_or_404(PortfolioItem, portfolio=portfolio, stock_id=stock_id)
+    item.delete()
+    messages.success(request, f"{item.stock.symbol} đã được xóa khỏi danh mục đầu tư của bạn.")
     return redirect('stock_analysis:portfolio_detail', pk=pk)
 
 class WatchListView(LoginRequiredMixin, ListView):
@@ -202,16 +243,39 @@ class WatchListView(LoginRequiredMixin, ListView):
     context_object_name = 'watchlist'
 
     def get_queryset(self):
-        return WatchList.objects.filter(user=self.request.user)
+        watchlist, created = WatchList.objects.get_or_create(user=self.request.user)
+        return watchlist.stocks.all()
 
 @login_required
 def add_to_watchlist(request, symbol):
     stock = get_object_or_404(Stock, symbol=symbol)
-    WatchList.objects.get_or_create(user=request.user, stock=stock)
+    watchlist, created = WatchList.objects.get_or_create(user=request.user)
+    watchlist.stocks.add(stock)
+    messages.success(request, f"{symbol} đã được thêm vào danh sách theo dõi của bạn.")
     return redirect('stock_analysis:watchlist')
 
 @login_required
 def remove_from_watchlist(request, symbol):
     stock = get_object_or_404(Stock, symbol=symbol)
-    WatchList.objects.filter(user=request.user, stock=stock).delete()
+    watchlist = get_object_or_404(WatchList, user=request.user)
+    watchlist.stocks.remove(stock)
+    messages.success(request, f"{symbol} đã được xóa khỏi danh sách theo dõi của bạn.")
     return redirect('stock_analysis:watchlist')
+
+@login_required
+def compare_stocks(request):
+    if request.method == 'POST':
+        symbols = request.POST.getlist('compare')
+        stock_service = StockService()
+        comparison_data = []
+
+        for symbol in symbols:
+            stock_data = stock_service.get_stock_data(symbol)
+            if stock_data is not None:
+                comparison_data.append(stock_data)
+
+        context = {
+            'comparison_data': comparison_data
+        }
+        return render(request, 'stock_analysis/stock_comparison.html', context)
+    return redirect('stock_analysis:stock_list')

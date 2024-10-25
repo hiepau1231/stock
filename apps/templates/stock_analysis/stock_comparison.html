@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}So sánh cổ phiếu{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">So sánh cổ phiếu</h1>
+
+    {% if comparison_data %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Chỉ số</th>
+                        {% for stock in comparison_data %}
+                            <th>{{ stock.symbol }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Giá hiện tại</td>
+                        {% for stock in comparison_data %}
+                            <td>{{ stock.current_price }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Thay đổi</td>
+                        {% for stock in comparison_data %}
+                            <td>{{ stock.change }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Khối lượng</td>
+                        {% for stock in comparison_data %}
+                            <td>{{ stock.volume }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>P/E</td>
+                        {% for stock in comparison_data %}
+                            <td>{{ stock.pe_ratio }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>EPS</td>
+                        {% for stock in comparison_data %}
+                            <td>{{ stock.eps }}</td>
+                        {% endfor %}
+                    </tr>
+                    <!-- Thêm các chỉ số khác tùy theo dữ liệu có sẵn -->
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>Không có dữ liệu để so sánh.</p>
+    {% endif %}
+</div>
+{% endblock %}

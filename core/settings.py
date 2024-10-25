@@ -40,6 +40,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.stock_analysis.middleware.RequestLoggingMiddleware',
 ]
 
 # URL configuration
@@ -115,6 +116,10 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'file': {
@@ -124,9 +129,9 @@ LOGGING = {
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'simple',
         },
     },
     'loggers': {
@@ -146,3 +151,7 @@ LOGGING = {
 # Third party apps configuration
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Thêm vào cuối file
+STOCK_DATA_CACHE_TIMEOUT = 300  # 5 minutes
+TECHNICAL_INDICATORS_CACHE_TIMEOUT = 600  # 10 minutes

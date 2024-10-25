@@ -4,82 +4,28 @@
 {% block title %} Danh mục đầu tư {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h6 class="text-primary mb-0">Danh mục đầu tư của tôi</h6>
-                        </div>
-                        <div class="col text-right">
-                            <a href="{% url 'stock_analysis:portfolio_create' %}" class="btn btn-sm btn-primary">
-                                Tạo danh mục mới
-                            </a>
+<div class="container mt-4">
+    <h1 class="mb-4">Danh mục đầu tư của bạn</h1>
+    
+    <a href="{% url 'stock_analysis:portfolio_create' %}" class="btn btn-primary mb-3">Tạo danh mục mới</a>
+
+    {% if portfolios %}
+        <div class="row">
+            {% for portfolio in portfolios %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ portfolio.name }}</h5>
+                            <p class="card-text">Số lượng cổ phiếu: {{ portfolio.portfolioitem_set.count }}</p>
+                            <a href="{% url 'stock_analysis:portfolio_detail' portfolio.id %}" class="btn btn-info">Xem chi tiết</a>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    {% if portfolios %}
-                        <div class="table-responsive">
-                            <table class="table align-items-center table-flush">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>Tên danh mục</th>
-                                        <th>Số lượng CP</th>
-                                        <th>Tổng giá trị</th>
-                                        <th>Ngày tạo</th>
-                                        <th>Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for portfolio in portfolios %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'stock_analysis:portfolio_detail' pk=portfolio.id %}" class="text-primary font-weight-bold">
-                                                {{ portfolio.name }}
-                                            </a>
-                                        </td>
-                                        <td>{{ portfolio.portfolioitem_set.count }}</td>
-                                        <td>
-                                            {% with total_value=portfolio.get_total_value %}
-                                                {{ total_value|floatformat:0 }} VND
-                                            {% endwith %}
-                                        </td>
-                                        <td>{{ portfolio.created_at|date:"d/m/Y" }}</td>
-                                        <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-icon-only text-light" type="button" data-toggle="dropdown">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="{% url 'stock_analysis:portfolio_detail' pk=portfolio.id %}">
-                                                        Chi tiết
-                                                    </a>
-                                                    <a class="dropdown-item text-danger" href="#" onclick="deletePortfolio({{ portfolio.id }})">
-                                                        Xóa
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <p>Bạn chưa có danh mục đầu tư nào</p>
-                            <a href="{% url 'stock_analysis:portfolio_create' %}" class="btn btn-primary">
-                                Tạo danh mục mới
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+            {% endfor %}
         </div>
-    </div>
+    {% else %}
+        <p>Bạn chưa có danh mục đầu tư nào. Hãy tạo danh mục mới!</p>
+    {% endif %}
 </div>
 {% endblock content %}
 

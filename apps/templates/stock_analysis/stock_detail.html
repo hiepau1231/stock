@@ -1,134 +1,118 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %} Chi tiết cổ phiếu {% endblock %}
+{% block title %}{{ stock.symbol }} - Chi tiết cổ phiếu{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <!-- Company Info -->
+<div class="container mt-4">
+    <h1>{{ stock.symbol }} - {{ stock.company_name }}</h1>
+    
     <div class="row">
-        <div class="col-xl-12 mb-4">
-            <div class="card">
+        <div class="col-md-8">
+            <div class="card mb-4">
                 <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h6 class="text-primary mb-0">Thông tin công ty</h6>
-                        </div>
-                        <div class="col text-right">
-                            <a href="{% url 'stock_analysis:add_to_watchlist' symbol=company_info.symbol %}" class="btn btn-sm btn-primary">
-                                Thêm vào theo dõi
-                            </a>
-                        </div>
-                    </div>
+                    Biểu đồ giá
                 </div>
                 <div class="card-body">
-                    {% if company_info %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Mã CP:</strong> {{ company_info.symbol }}</p>
-                                <p><strong>Tên công ty:</strong> {{ company_info.company_name }}</p>
-                                <p><strong>Ngành:</strong> {{ company_info.industry }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Vốn hóa:</strong> {{ company_info.market_cap|floatformat:0 }} tỷ</p>
-                                <p><strong>Sàn:</strong> {{ company_info.exchange }}</p>
-                            </div>
-                        </div>
-                    {% else %}
-                        <p>Không có thông tin công ty</p>
-                    {% endif %}
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    Thông tin cơ bản
+                </div>
+                <div class="card-body">
+                    <p><strong>Giá hiện tại:</strong> {{ stock.current_price }}</p>
+                    <p><strong>Thay đổi:</strong> {{ stock.change }}</p>
+                    <p><strong>Khối lượng:</strong> {{ stock.volume }}</p>
+                    <p><strong>Ngành:</strong> {{ stock.industry }}</p>
+                    <p><strong>Sàn giao dịch:</strong> {{ stock.exchange }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- Thêm phần hiển thị chỉ số kỹ thuật -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    Chỉ số kỹ thuật
+                </div>
+                <div class="card-body">
+                    <p><strong>RSI:</strong> {{ technical_indicators.rsi }}</p>
+                    <p><strong>MACD:</strong> {{ technical_indicators.macd }}</p>
+                    <p><strong>Bollinger Bands:</strong></p>
+                    <ul>
+                        <li>Upper: {{ technical_indicators.bollinger_bands.upper }}</li>
+                        <li>Middle: {{ technical_indicators.bollinger_bands.middle }}</li>
+                        <li>Lower: {{ technical_indicators.bollinger_bands.lower }}</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Price Chart -->
     <div class="row">
-        <div class="col-xl-12 mb-4">
-            <div class="card">
+        <div class="col-md-12">
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h6 class="text-primary mb-0">Biểu đồ giá</h6>
+                    Dữ liệu lịch sử
                 </div>
                 <div class="card-body">
-                    <div id="priceChart" style="height: 400px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Financial Info -->
-    <div class="row">
-        <div class="col-xl-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="text-primary mb-0">Thông tin tài chính</h6>
-                </div>
-                <div class="card-body">
-                    {% if financial_info %}
-                        <div class="table-responsive">
-                            <table class="table align-items-center">
-                                <thead>
-                                    <tr>
-                                        <th>Chỉ số</th>
-                                        <th>Giá trị</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>P/E</td>
-                                        <td>{{ financial_info.pe_ratio|floatformat:2 }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>ROE</td>
-                                        <td>{{ financial_info.roe|floatformat:2 }}%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>ROA</td>
-                                        <td>{{ financial_info.roa|floatformat:2 }}%</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p>Không có thông tin tài chính</p>
-                    {% endif %}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Giá mở cửa</th>
+                                <th>Giá cao nhất</th>
+                                <th>Giá thấp nhất</th>
+                                <th>Giá đóng cửa</th>
+                                <th>Khối lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in historical_data %}
+                            <tr>
+                                <td>{{ data.date }}</td>
+                                <td>{{ data.open }}</td>
+                                <td>{{ data.high }}</td>
+                                <td>{{ data.low }}</td>
+                                <td>{{ data.close }}</td>
+                                <td>{{ data.volume }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}
 
 {% block javascripts %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const historicalData = {{ historical_data|safe|default:'null' }};
-    
-    if (historicalData) {
-        const trace = {
-            x: historicalData.map(d => d.date),
-            close: historicalData.map(d => d.close),
-            high: historicalData.map(d => d.high),
-            low: historicalData.map(d => d.low),
-            open: historicalData.map(d => d.open),
-            type: 'candlestick',
-            xaxis: 'x',
-            yaxis: 'y'
-        };
-
-        const layout = {
-            dragmode: 'zoom',
-            showlegend: false,
-            xaxis: {
-                rangeslider: {
-                    visible: false
+    var ctx = document.getElementById('priceChart').getContext('2d');
+    var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ dates|safe }},
+            datasets: [{
+                label: 'Giá đóng cửa',
+                data: {{ prices|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: false
                 }
             }
-        };
-
-        Plotly.newPlot('priceChart', [trace], layout);
-    }
-});
+        }
+    });
 </script>
-{% endblock javascripts %}
+{% endblock %}

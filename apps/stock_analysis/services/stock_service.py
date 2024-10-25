@@ -5,6 +5,8 @@ import pandas as pd
 from requests.exceptions import RequestException
 from vnstock import *  # Import tất cả các hàm từ vnstock
 from django.core.cache import cache
+from django.conf import settings
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +20,22 @@ class StockService:
     def _make_api_call_with_retry(self, func, *args, **kwargs):
         for attempt in range(self.MAX_RETRIES):
             try:
-                return func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                if result is None or (isinstance(result, pd.DataFrame) and result.empty):
+                    raise ValueError("API returned empty result")
+                return result
+            except RequestException as e:
+                logger.warning(f"API request failed (attempt {attempt + 1}/{self.MAX_RETRIES}): {str(e)}")
+            except ValueError as e:
+                logger.warning(f"API returned invalid data (attempt {attempt + 1}/{self.MAX_RETRIES}): {str(e)}")
             except Exception as e:
-                logger.error(f"API call failed: {str(e)}")
-                if attempt == self.MAX_RETRIES - 1:
-                    return None
+                logger.error(f"Unexpected error in API call (attempt {attempt + 1}/{self.MAX_RETRIES}): {str(e)}")
+            
+            if attempt < self.MAX_RETRIES - 1:
                 time.sleep(self.RETRY_DELAY)
+        
+        logger.error(f"All {self.MAX_RETRIES} attempts failed for API call")
+        return None
 
     def get_market_overview(self):
         """Lấy tổng quan thị trường"""
@@ -48,35 +60,53 @@ class StockService:
             'change_percent': [1.0, 0.5, 0.2]
         })
 
-    def get_stock_data(self, symbol, start_date, end_date):
-        max_retries = 3
-        retry_delay = 5  # seconds
+    def get_stock_data(self, symbol):
+        cache_key = f'stock_data_{symbol}'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
 
-        for attempt in range(max_retries):
-            try:
-                data = stock_historical_data(symbol=symbol, start_date=start_date, end_date=end_date)
-                return data
-            except RequestException as e:
-                if attempt < max_retries - 1:
-                    print(f"Lỗi kết nối: {e}. Thử lại sau {retry_delay} giây...")
-                    time.sleep(retry_delay)
-                else:
-                    print(f"Không thể lấy dữ liệu sau {max_retries} lần thử. Lỗi: {e}")
-                    return None
+        try:
+            # Lấy dữ liệu từ API hoặc database
+            data = self._fetch_stock_data(symbol)
+            if data:
+                cache.set(cache_key, data, timeout=settings.STOCK_DATA_CACHE_TIMEOUT)
+            return data
+        except ValidationError as e:
+            logger.error(f"Validation error for stock {symbol}: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error fetching data for stock {symbol}: {str(e)}")
+            return None
+
+    def _fetch_stock_data(self, symbol):
+        # Implement logic to fetch stock data from API or database
+        # This is just a placeholder
+        return {
+            'symbol': symbol,
+            'current_price': 100.0,
+            'change': 1.5,
+            'volume': 1000000,
+            'pe_ratio': 15.5,
+            'eps': 6.5,
+        }
 
     def get_stock_historical_data(self, symbol, start_date=None, end_date=None):
         """Lấy dữ liệu lịch sử của một mã cổ phiếu"""
         try:
             if not start_date:
-                start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+                start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
             if not end_date:
                 end_date = datetime.now().strftime('%Y-%m-%d')
             
-            return stock_historical_data(
+            data = stock_historical_data(
                 symbol=symbol,
                 start_date=start_date,
                 end_date=end_date
             )
+            if data is not None and not data.empty:
+                data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
+            return data
         except Exception as e:
             logger.error(f"Error getting historical data for {symbol}: {str(e)}")
             return None
@@ -194,3 +224,29 @@ class StockService:
             'price': [100 - i for i in range(limit)],
             'priceChangePercent': [-5.0 + i*0.1 for i in range(limit)]
         })
+
+    def get_technical_indicators(self, symbol):
+        cache_key = f'technical_indicators_{symbol}'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
+        # Calculate technical indicators
+        indicators = self._calculate_technical_indicators(symbol)
+        if indicators:
+            cache.set(cache_key, indicators, timeout=settings.TECHNICAL_INDICATORS_CACHE_TIMEOUT)
+        return indicators
+
+    def _calculate_technical_indicators(self, symbol):
+        # Implement logic to calculate technical indicators
+        # This is just a placeholder
+        return {
+            'symbol': symbol,
+            'rsi': 65.5,
+            'macd': 0.75,
+            'bollinger_bands': {
+                'upper': 105.0,
+                'middle': 100.0,
+                'lower': 95.0
+            }
+        }

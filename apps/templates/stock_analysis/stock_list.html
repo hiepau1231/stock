@@ -33,49 +33,59 @@
         </form>
     </div>
 
-    <!-- Bảng danh sách cổ phiếu -->
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Mã cổ phiếu</th>
-                    <th>Tên công ty</th>
-                    <th>Ngành</th>
-                    <th>Giá hiện tại</th>
-                    <th>Thay đổi</th>
-                    <th>Khối lượng</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for stock in stocks %}
-                <tr>
-                    <td>
-                        {% if stock.symbol %}
-                            <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">{{ stock.symbol }}</a>
-                        {% else %}
-                            {{ stock.ticker|default:"N/A" }}
-                        {% endif %}
-                    </td>
-                    <td>{{ stock.company_name|default:"N/A" }}</td>
-                    <td>{{ stock.industry|default:"N/A" }}</td>
-                    <td>{{ stock.current_price|default:"N/A" }}</td>
-                    <td>{{ stock.change|default:"N/A" }}</td>
-                    <td>{{ stock.volume|default:"N/A" }}</td>
-                    <td>
-                        {% if stock.symbol %}
-                            <a href="{% url 'stock_analysis:add_to_watchlist' stock.symbol %}" class="btn btn-sm btn-outline-primary">Thêm vào watchlist</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7">Không có dữ liệu cổ phiếu.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <!-- Form so sánh cổ phiếu -->
+    <form action="{% url 'stock_analysis:compare_stocks' %}" method="post" id="compareForm">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-info mb-3" id="compareButton" disabled>So sánh cổ phiếu đã chọn</button>
+
+        <!-- Bảng danh sách cổ phiếu -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>So sánh</th>
+                        <th>Mã cổ phiếu</th>
+                        <th>Tên công ty</th>
+                        <th>Ngành</th>
+                        <th>Giá hiện tại</th>
+                        <th>Thay đổi</th>
+                        <th>Khối lượng</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="compare" value="{{ stock.symbol }}" class="compare-checkbox">
+                        </td>
+                        <td>
+                            {% if stock.symbol %}
+                                <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">{{ stock.symbol }}</a>
+                            {% else %}
+                                {{ stock.ticker|default:"N/A" }}
+                            {% endif %}
+                        </td>
+                        <td>{{ stock.company_name|default:"N/A" }}</td>
+                        <td>{{ stock.industry|default:"N/A" }}</td>
+                        <td>{{ stock.current_price|default:"N/A" }}</td>
+                        <td>{{ stock.change|default:"N/A" }}</td>
+                        <td>{{ stock.volume|default:"N/A" }}</td>
+                        <td>
+                            {% if stock.symbol %}
+                                <a href="{% url 'stock_analysis:add_to_watchlist' stock.symbol %}" class="btn btn-sm btn-outline-primary">Thêm vào watchlist</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">Không có dữ liệu cổ phiếu.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
 
     <!-- Phân trang -->
     {% if is_paginated %}
@@ -104,13 +114,21 @@
 
 
 {% block javascripts %}
-
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const compareCheckboxes = document.querySelectorAll('.compare-checkbox');
+    const compareButton = document.getElementById('compareButton');
 
-// Thêm JavaScript cho các tính năng tương tác nếu cần
+    compareCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateCompareButton);
+    });
 
+    function updateCompareButton() {
+        const checkedBoxes = document.querySelectorAll('.compare-checkbox:checked');
+        compareButton.disabled = checkedBoxes.length < 2 || checkedBoxes.length > 5;
+    }
+});
 </script>
-
 {% endblock javascripts %}
 
 
