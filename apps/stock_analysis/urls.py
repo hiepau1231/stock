@@ -31,4 +31,8 @@ urlpatterns = [
     path('api/industry/<int:industry_id>/', views.get_industry_data, name='get_industry_data'),
     path('check-data/', views.check_data, name='check_data'),
     path('refresh-data/', views.refresh_data, name='refresh_data'),
+    path('portfolio/add-sample-data/', views.add_sample_data, name='add_sample_data'),
+    path('portfolio/<int:pk>/edit/', views.PortfolioEditView.as_view(), name='portfolio_edit'),
+    path('portfolio/<int:pk>/optimize/', views.PortfolioOptimizeView.as_view(), name='portfolio_optimize'),
+    path('portfolio/<int:pk>/transactions/', views.PortfolioTransactionView.as_view(), name='portfolio_transactions'),
 ]

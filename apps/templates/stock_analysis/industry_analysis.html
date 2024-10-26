@@ -1,67 +1,206 @@
 {% extends "layouts/base.html" %}
-
-{% block title %} Phân tích ngành {% endblock %}
+{% load static %}
+{% load stock_filters %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid mt-4">
+    <!-- Industry Selection -->
     <div class="row">
         <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header pb-0">
-                    <h4>Phân tích ngành</h4>
-                    <div class="industry-selector mb-3">
-                        <select class="form-control" id="industry-select">
-                            <option value="">Chọn ngành</option>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Phân tích ngành</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="industrySelect">Chọn ngành:</label>
+                        <select class="form-control" id="industrySelect">
+                            <option value="">-- Chọn ngành --</option>
                             {% for industry in industries %}
                             <option value="{{ industry.id }}">{{ industry.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div id="industry-overview">
-                        <!-- Thông tin tổng quan về ngành -->
-                    </div>
-                    
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Danh sách cổ phiếu theo sàn</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="stock-list">
-                                        <!-- Danh sách cổ phiếu sẽ được load bằng AJAX -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Phân tích dòng tiền</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="money-flow-chart">
-                                        <!-- Biểu đồ dòng tiền -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Top 3 cổ phiếu tiềm năng</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="potential-stocks">
-                                        <!-- Danh sách cổ phiếu tiềm năng -->
-                                    </div>
+    <!-- Thêm vào sau div#industrySelect -->
+    <div id="loadingIndicator" style="display: none;" class="text-center mt-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-2">Đang tải dữ liệu...</p>
+    </div>
+
+    <!-- Industry Data (Initially Hidden) -->
+    <div id="industryData" style="display: none;">
+        <!-- Overview -->
+        <div class="row mt-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0">Vốn hóa</h5>
+                                <span class="h2 font-weight-bold mb-0" id="marketCap"></span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
+                                    <i class="ni ni-money-coins"></i>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0">P/E Trung bình</h5>
+                                <span class="h2 font-weight-bold mb-0" id="avgPE"></span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
+                                    <i class="ni ni-chart-bar-32"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0">Số lượng CP</h5>
+                                <span class="h2 font-weight-bold mb-0" id="stockCount"></span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
+                                    <i class="ni ni-collection"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Money Flow Chart -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Dòng tiền ngành</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="moneyFlowChart" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stocks by Exchange -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Danh sách cổ phiếu theo sàn</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#hose" role="tab">HOSE</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#hnx" role="tab">HNX</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#upcom" role="tab">UPCOM</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="hose" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Mã CK</th>
+                                                <th>Tên</th>
+                                                <th>Giá</th>
+                                                <th>Thay đổi</th>
+                                                <th>Khối lượng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="hoseStocks"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="hnx" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Mã CK</th>
+                                                <th>Tên</th>
+                                                <th>Giá</th>
+                                                <th>Thay đổi</th>
+                                                <th>Khối lượng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="hnxStocks"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="upcom" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Mã CK</th>
+                                                <th>Tên</th>
+                                                <th>Giá</th>
+                                                <th>Thay đổi</th>
+                                                <th>Khối lượng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="upcomStocks"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Potential Stocks -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Cổ phiếu tiềm năng</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table align-items-center">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Mã CK</th>
+                                        <th>Tên</th>
+                                        <th>Giá</th>
+                                        <th>Vốn hóa</th>
+                                        <th>Điểm đánh giá</th>
+                                        <th>Lý do</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="potentialStocks"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -71,33 +210,151 @@
 </div>
 {% endblock %}
 
-{% block javascripts %}
-{{ block.super }}
+{% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#industry-select').change(function() {
+    $('#industrySelect').change(function() {
         const industryId = $(this).val();
+        console.log('Selected industry ID:', industryId);
+        
         if (industryId) {
-            loadIndustryData(industryId);
+            // Show loading indicator
+            $('#industryData').hide();
+            $('#loadingIndicator').show();
+            
+            // Sửa URL để khớp với urls.py
+            const url = `/stock/api/industry/${industryId}/`;
+            console.log('Fetching data from:', url);
+            
+            // Thêm debug cho AJAX request
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function(data) {
+                    console.log('Success! Received data:', data);
+                    if (data.error) {
+                        console.error("Error:", data.error);
+                        alert("Error loading industry data. Please try again.");
+                        return;
+                    }
+                    
+                    try {
+                        // Show the data container
+                        $('#industryData').show();
+                        
+                        // Update overview
+                        $('#marketCap').text(formatNumber(data.overview.total_market_cap));
+                        $('#avgPE').text(data.overview.average_pe.toFixed(2));
+                        $('#stockCount').text(data.overview.stock_count);
+                        
+                        // Update money flow chart
+                        if (data.money_flow.dates.length > 0) {
+                            const trace = {
+                                x: data.money_flow.dates,
+                                y: data.money_flow.values,
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'Dòng tiền',
+                                line: {
+                                    color: '#5e72e4'
+                                }
+                            };
+                            
+                            const layout = {
+                                title: 'Dòng tiền ngành (Triệu VND)',
+                                xaxis: {
+                                    title: 'Ngày'
+                                },
+                                yaxis: {
+                                    title: 'Giá trị'
+                                }
+                            };
+                            
+                            Plotly.newPlot('moneyFlowChart', [trace], layout);
+                        } else {
+                            $('#moneyFlowChart').html('<div class="alert alert-warning">Không có dữ liệu dòng tiền</div>');
+                        }
+                        
+                        // Update stocks by exchange
+                        updateStockTable('HOSE', data.stocks_by_exchange.HOSE || [], '#hoseStocks');
+                        updateStockTable('HNX', data.stocks_by_exchange.HNX || [], '#hnxStocks');
+                        updateStockTable('UPCOM', data.stocks_by_exchange.UPCOM || [], '#upcomStocks');
+                        
+                        // Update potential stocks
+                        if (data.potential_stocks.length > 0) {
+                            const potentialStocksHtml = data.potential_stocks.map(stock => `
+                                <tr>
+                                    <td>${stock.symbol}</td>
+                                    <td>${stock.name}</td>
+                                    <td>${formatNumber(stock.price)} VND</td>
+                                    <td>${formatNumber(stock.market_cap)}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="mr-2">${stock.score}</span>
+                                            <div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-gradient-success" role="progressbar" 
+                                                     style="width: ${stock.score}%" 
+                                                     aria-valuenow="${stock.score}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <ul class="mb-0 pl-3">
+                                            ${stock.reasons.map(reason => `<li>${reason}</li>`).join('')}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            `).join('');
+                            $('#potentialStocks').html(potentialStocksHtml);
+                        } else {
+                            $('#potentialStocks').html('<tr><td colspan="6" class="text-center">Không có dữ liệu cổ phiếu tiềm năng</td></tr>');
+                        }
+                    } catch (error) {
+                        console.error("Error processing data:", error);
+                        alert("Error processing industry data. Please try again.");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error details:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText
+                    });
+                    alert('Error loading industry data. Check console for details.');
+                },
+                complete: function() {
+                    // Hide loading indicator
+                    $('#loadingIndicator').hide();
+                }
+            });
+        } else {
+            $('#industryData').hide();
         }
     });
+    
+    function updateStockTable(exchange, stocks, tableId) {
+        const html = stocks.map(stock => `
+            <tr>
+                <td>${stock.symbol}</td>
+                <td>${stock.name}</td>
+                <td>${formatNumber(stock.price)} VND</td>
+                <td class="${stock.change > 0 ? 'text-success' : 'text-danger'}">
+                    ${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)}%
+                </td>
+                <td>${formatNumber(stock.volume)}</td>
+            </tr>
+        `).join('');
+        $(tableId).html(html || `<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>`);
+    }
+    
+    function formatNumber(num) {
+        return new Intl.NumberFormat('vi-VN').format(num);
+    }
 });
-
-function loadIndustryData(industryId) {
-    $.ajax({
-        url: `/stock/api/industry/${industryId}/`,
-        method: 'GET',
-        success: function(data) {
-            updateIndustryOverview(data.overview);
-            updateStockList(data.stocks);
-            updateMoneyFlowChart(data.money_flow);
-            updatePotentialStocks(data.potential_stocks);
-        },
-        error: function(err) {
-            console.error('Error loading industry data:', err);
-        }
-    });
-}
 </script>
 {% endblock %}

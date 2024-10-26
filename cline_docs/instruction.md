@@ -222,50 +222,81 @@ Here's the project structure:
 
 stock/
 ├── apps/
-│ ├── authentication/ # User authentication
-│ │ ├── forms.py
-│ │ ├── urls.py
-│ │ └── views.py
-│ ├── home/ # Home page app
-│ │ ├── urls.py
-│ │ └── views.py
-│ ├── predictions/ # Stock predictions
-│ │ └── models.py
-│ ├── stock_analysis/ # Main stock analysis app
-│ │ ├── admin.py
-│ │ ├── models.py
-│ │ ├── urls.py
-│ │ ├── views.py
-│ │ ├── services/
-│ │ │ └── stock_service.py
-│ │ ├── management/
-│ │ │ └── commands/
-│ │ │ └── scrape_stock_data.py
-│ │ ├── middleware/
-│ │ │ └── request_logging.py
-│ │ └���─ utils/
-│ │ └── performance.py
-│ ├── static/ # Static files
-│ │ └── assets/
-│ │ ├── css/
-│ │ ├── img/
-│ │ ├── js/
-│ │ └── vendor/
-│ └── templates/ # HTML templates
-│ ├── accounts/
-│ ├── home/
-│ ├── includes/
-│ └── stock_analysis/
-├── core/ # Project settings
-│ ├── settings.py
-│ ├── urls.py
-│ └── wsgi.py
-├── cline_docs/ # Project documentation
-│ ├── currentTask.md
-│ ├── instruction.md
-│ └── projectRoadmap.md
-├── staticfiles/ # Collected static files
-├── .env # Environment variables
+│   ├── authentication/
+│   │   ├── forms.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── home/
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── predictions/
+│   │   └── models.py
+│   ├── stock_analysis/
+│   │   ├── admin.py
+│   │   ├── models.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   ├── services/
+│   │   │   ├── stock_service.py
+│   │   │   ├── portfolio_service.py
+│   │   │   ├── portfolio_optimization_service.py
+│   │   │   ├── portfolio_report_service.py
+│   │   │   ├── portfolio_analysis_service.py
+│   │   │   ├── alert_service.py
+│   │   │   └── recommendation_service.py
+│   │   ├── management/
+│   │   │   └── commands/
+│   │   │       └── auto_update_data.py
+│   │   ├── middleware/
+│   │   │   └── request_logging.py
+│   │   ├── templatetags/
+│   │   │   ├── __init__.py
+│   │   │   └── stock_filters.py
+│   │   └── utils/
+│   │       ├── performance.py
+│   │       ├── portfolio_report.py
+│   │       ├── portfolio_metrics.py
+│   │       └── portfolio_import.py
+│   ├── static/
+│   │   └── assets/
+│   │       ├── css/
+│   │       ├── img/
+│   │       ├── js/
+│   │       └── vendor/
+│   └── templates/
+│       ├── accounts/
+│       ├── home/
+│       ├── includes/
+│       └── stock_analysis/
+│           ├── dashboard.html
+│           ├── stock_list.html
+│           ├── stock_detail.html
+│           ├── portfolio_list.html
+│           ├── portfolio_detail.html
+│           ├── portfolio_edit.html
+│           ├── portfolio_create.html
+│           ├── portfolio_optimize.html
+│           ├── portfolio_report.html
+│           ├── portfolio_transactions.html
+│           ├── portfolio_alerts.html
+│           ├── portfolio_import.html
+│           ├── portfolio_analysis.html
+│           ├── recommendations.html
+│           ├── industry_analysis.html
+│           ├── watchlist.html
+│           └── check_data.html
+├── core/
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── cline_docs/
+│   ├── currentTask.md
+│   ├── currentStatus.md
+│   ├── instruction.md
+│   ├── projectRoadmap.md
+│   └── techStack.md
+├── staticfiles/
+├── .env
 ├── .gitignore
 ├── manage.py
 ├── README.md

@@ -1,27 +1,31 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, View
+from django.views.generic import ListView, DetailView, CreateView, View, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse, FileResponse, HttpResponse
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from .utils.performance import query_debugger, optimize_queryset
+from django.views.decorators.csrf import csrf_exempt
 
 import pandas as pd
 import json
 import plotly.graph_objs as go
 from plotly.offline import plot
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from .models import Stock, Portfolio, PortfolioItem, WatchList, PriceAlert, Industry, StockPrice
+from .models import Stock, Portfolio, PortfolioItem, WatchList, PriceAlert, Industry, StockPrice, PortfolioTransaction
 from .services.stock_service import StockService
 from .services.report_service import PortfolioReportService
 from .services.recommendation_service import RecommendationService
 from django.utils import timezone
 
 import logging
+import statistics  # Thêm dòng này vào đầu file
+from django.db.models import Avg, Sum, Count, F, Q
+from .services.portfolio_optimization_service import PortfolioOptimizationService
 
 logger = logging.getLogger(__name__)
 
@@ -260,20 +264,61 @@ class StockDetailView(LoginRequiredMixin, DetailView):
 class PortfolioListView(LoginRequiredMixin, ListView):
     model = Portfolio
     template_name = 'stock_analysis/portfolio_list.html'
-    context_object_name = 'portfolios'
-
+    
     def get_queryset(self):
         return Portfolio.objects.filter(user=self.request.user)
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        portfolios = self.get_queryset()
+        
+        # Tính toán các chỉ số tổng hợp
+        total_value = sum(p.current_value or 0 for p in portfolios)
+        total_initial = sum(p.initial_value or 0 for p in portfolios)
+        total_profit = total_value - total_initial
+        
+        # Tính hiệu suất trung bình
+        performances = []
+        for p in portfolios:
+            if p.initial_value and p.initial_value > 0:
+                perf = ((p.current_value - p.initial_value) / p.initial_value) * 100
+                performances.append(perf)
+        avg_performance = sum(performances) / len(performances) if performances else 0
+        
+        context.update({
+            'total_value': total_value,
+            'total_profit': total_profit,
+            'avg_performance': avg_performance,
+            'segment': 'portfolio_list'
+        })
+        return context
 
 class PortfolioCreateView(LoginRequiredMixin, CreateView):
     model = Portfolio
     template_name = 'stock_analysis/portfolio_create.html'
-    fields = ['name']
-    success_url = reverse_lazy('stock_analysis:portfolio_list')
-
+    fields = ['name', 'description', 'benchmark_symbol']
+    
     def form_valid(self, form):
         form.instance.user = self.request.user
+        messages.success(self.request, 'Danh mục đã được tạo thành công!')
         return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('stock_analysis:portfolio_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'segment': 'portfolio',
+            'title': 'Tạo danh mục mới',
+            'benchmark_options': [
+                ('^VNINDEX', 'VN-Index'),
+                ('^VN30', 'VN30'),
+                ('^HNX', 'HNX-Index'),
+                ('^UPCOM', 'UPCOM-Index')
+            ]
+        })
+        return context
 
 class PortfolioDetailView(LoginRequiredMixin, DetailView):
     model = Portfolio
@@ -287,6 +332,22 @@ class PortfolioDetailView(LoginRequiredMixin, DetailView):
         stock_service = StockService()
         performance_data = stock_service.calculate_portfolio_performance(portfolio)
         risk_data = stock_service.calculate_portfolio_risk(portfolio)
+        
+        # Kiểm tra và xử lý thông báo lỗi
+        if 'error' in performance_data:
+            messages.warning(self.request, f"Performance calculation warning: {performance_data['error']}")
+        if 'message' in performance_data:
+            messages.info(self.request, performance_data['message'])
+            
+        if risk_data is None:
+            messages.warning(self.request, "Could not calculate risk metrics")
+            risk_data = {
+                'volatility': 0,
+                'sharpe_ratio': 0,
+                'beta': 0,
+                'var_95': 0,
+                'max_drawdown': 0
+            }
         
         context.update({
             'performance_data': performance_data,
@@ -362,11 +423,20 @@ def compare_stocks(request):
 
 @login_required
 def industry_analysis(request):
-    industries = Industry.objects.all()
-    context = {
-        'industries': industries
-    }
-    return render(request, 'stock_analysis/industry_analysis.html', context)
+    try:
+        # Lấy danh sách ngành
+        industries = Industry.objects.all()
+        logger.info(f"Found {industries.count()} industries")
+        
+        context = {
+            'industries': industries,
+            'segment': 'industry_analysis'
+        }
+        return render(request, 'stock_analysis/industry_analysis.html', context)
+    except Exception as e:
+        logger.error(f"Error in industry_analysis view: {str(e)}")
+        messages.error(request, "Error loading industry data")
+        return render(request, 'stock_analysis/industry_analysis.html', {'industries': []})
 
 @login_required
 def stock_intraday(request, symbol):
@@ -476,34 +546,28 @@ def add_price_alert(request, symbol):
 def remove_price_alert(request, alert_id):
     alert = get_object_or_404(PriceAlert, id=alert_id, user=request.user)
     alert.delete()
-    messages.success(request, f'Đã xóa cảnh báo giá cho {alert.stock.symbol}')
+    messages.success(request, f'Đã xóa cnh báo giá cho {alert.stock.symbol}')
     return redirect('stock_analysis:price_alert_list')
 
 @login_required
 def export_portfolio_pdf(request, pk):
     portfolio = get_object_or_404(Portfolio, pk=pk, user=request.user)
-    items = portfolio.portfolioitem_set.all()
+    report_service = PortfolioReportService()
+    pdf = report_service.generate_pdf_report(portfolio)
     
-    buffer = PortfolioReportService.generate_pdf_report(portfolio, items)
-    
-    return FileResponse(
-        buffer,
-        as_attachment=True,
-        filename=f'portfolio_{portfolio.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
-    )
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{portfolio.name}_report.pdf"'
+    return response
 
 @login_required
 def export_portfolio_excel(request, pk):
     portfolio = get_object_or_404(Portfolio, pk=pk, user=request.user)
-    items = portfolio.portfolioitem_set.all()
+    report_service = PortfolioReportService()
+    excel_data = report_service.generate_excel_report(portfolio)
     
-    buffer = PortfolioReportService.generate_excel_report(portfolio, items)
-    
-    return FileResponse(
-        buffer,
-        as_attachment=True,
-        filename=f'portfolio_{portfolio.name}_{datetime.now().strftime("%Y%m%d")}.xlsx'
-    )
+    response = HttpResponse(excel_data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{portfolio.name}_report.xlsx"'
+    return response
 
 class RecommendationsView(LoginRequiredMixin, View):
     template_name = 'stock_analysis/recommendations.html'
@@ -530,68 +594,160 @@ class RecommendationsView(LoginRequiredMixin, View):
         
         return render(request, self.template_name, context)
 
-class PortfolioOptimizationView(LoginRequiredMixin, View):
-    template_name = 'stock_analysis/portfolio_optimization.html'
+class PortfolioOptimizationView(LoginRequiredMixin, DetailView):
+    model = Portfolio
+    template_name = 'stock_analysis/portfolio_optimize.html'
     
-    def get(self, request, pk):
-        portfolio = get_object_or_404(Portfolio, pk=pk, user=request.user)
+    def get(self, request, *args, **kwargs):
+        portfolio = self.get_object()
         optimization_service = PortfolioOptimizationService()
         
-        optimization_data = optimization_service.get_portfolio_optimization(portfolio)
+        # Sửa tên phương thức từ get_portfolio_optimization thành optimize_portfolio
+        optimization_data = optimization_service.optimize_portfolio(
+            portfolio=portfolio,
+            risk_tolerance=request.GET.get('risk_tolerance', 'moderate')
+        )
         
+        if 'error' in optimization_data:
+            messages.warning(request, optimization_data['message'])
+            return redirect('stock_analysis:portfolio_detail', pk=portfolio.id)
+            
         context = {
             'portfolio': portfolio,
-            'optimization_data': optimization_data
+            'optimization_data': optimization_data,
+            'risk_tolerance_options': [
+                ('conservative', 'Thận trọng'),
+                ('moderate', 'Cân bằng'),
+                ('aggressive', 'Tích cực')
+            ]
         }
+        
         return render(request, self.template_name, context)
 
+@csrf_exempt
 @login_required
 def get_industry_data(request, industry_id):
-    industry = get_object_or_404(Industry, id=industry_id)
-    stocks = Stock.objects.filter(stockindustry__industry=industry)
-    
-    # Tính toán các chỉ số ngành
-    overview = {
-        'name': industry.name,
-        'total_market_cap': sum(stock.market_cap for stock in stocks if stock.market_cap),
-        'average_pe': statistics.mean(stock.pe_ratio for stock in stocks if stock.pe_ratio),
-        'growth': 5.2  # Thay bằng tính toán thực tế
-    }
-    
-    # Phân loại theo sàn
-    stocks_by_exchange = {}
-    for stock in stocks:
-        if stock.exchange not in stocks_by_exchange:
-            stocks_by_exchange[stock.exchange] = []
-        stocks_by_exchange[stock.exchange].append({
-            'symbol': stock.symbol,
-            'name': stock.name,
-            'price': stock.current_price,
-            'change': stock.percent_change
-        })
-    
-    # Top 3 cổ phiếu tiềm năng
-    potential_stocks = list(stocks)
-    potential_stocks.sort(key=lambda x: x.market_cap, reverse=True)
-    potential_stocks = potential_stocks[:3]
-    
-    return JsonResponse({
-        'overview': overview,
-        'stocks': stocks_by_exchange,
-        'money_flow': {
-            'dates': ['2024-01', '2024-02', '2024-03'],
-            'values': [1000000, 1200000, 900000]
-        },
-        'potential_stocks': [
-            {
+    try:
+        logger.info(f"API called with industry_id: {industry_id}")
+        industry = get_object_or_404(Industry, id=industry_id)
+        logger.info(f"Found industry: {industry.name}")
+        
+        stocks = Stock.objects.filter(industry=industry)
+        logger.info(f"Found {stocks.count()} stocks in industry")
+        
+        # Log chi tiết từng cổ phiếu
+        for stock in stocks:
+            logger.info(f"Processing stock: {stock.symbol}")
+        
+        # Tính toán các chỉ số ngành
+        total_market_cap = sum(s.market_cap or 0 for s in stocks)
+        pe_ratios = [s.pe_ratio for s in stocks if s.pe_ratio is not None]
+        avg_pe = sum(pe_ratios) / len(pe_ratios) if pe_ratios else 0
+        
+        overview = {
+            'name': industry.name,
+            'total_market_cap': total_market_cap,
+            'average_pe': round(avg_pe, 2),
+            'stock_count': stocks.count()
+        }
+        logger.info(f"Overview data: {overview}")
+        
+        # Phân loại theo sàn
+        stocks_by_exchange = {
+            'HOSE': [],
+            'HNX': [],
+            'UPCOM': []
+        }
+        
+        # Danh sách cổ phiếu theo sàn
+        hose_stocks = ['VIC', 'VHM', 'VCB', 'BID', 'CTG', 'HPG', 'MSN', 'VNM', 'FPT', 'MWG']
+        hnx_stocks = ['SHS', 'PVS', 'NVB', 'CEO']
+        
+        for stock in stocks:
+            logger.info(f"Classifying stock {stock.symbol}")
+            if stock.symbol in hose_stocks:
+                exchange = 'HOSE'
+            elif stock.symbol in hnx_stocks:
+                exchange = 'HNX'
+            else:
+                exchange = 'UPCOM'
+            
+            stock_data = {
                 'symbol': stock.symbol,
                 'name': stock.name,
-                'price': stock.current_price,
-                'reason': 'Market leader with strong fundamentals'
+                'price': float(stock.current_price or 0),
+                'change': float(stock.percent_change or 0),
+                'volume': int(stock.volume or 0),
+                'market_cap': int(stock.market_cap or 0)
             }
-            for stock in potential_stocks
-        ]
-    })
+            stocks_by_exchange[exchange].append(stock_data)
+            logger.info(f"Added {stock.symbol} to {exchange}")
+        
+        # Tính toán dòng tiền
+        money_flow = calculate_industry_money_flow(stocks)
+        logger.info(f"Calculated money flow with {len(money_flow['dates'])} data points")
+        
+        response_data = {
+            'overview': overview,
+            'stocks_by_exchange': stocks_by_exchange,
+            'money_flow': money_flow,
+            'potential_stocks': get_potential_stocks(stocks)
+        }
+        
+        logger.info("Successfully prepared response data")
+        logger.info(f"Response data: {response_data}")
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        logger.error(f"Error in get_industry_data: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': str(e),
+            'detail': 'An error occurred while processing the request'
+        }, status=500)
+
+def calculate_industry_money_flow(stocks):
+    """Tính toán dòng tiền của ngành"""
+    try:
+        # Lấy d liệu 3 tháng gần nhất
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=90)
+        
+        dates = []
+        values = []
+        
+        current_date = start_date
+        while current_date <= end_date:
+            total_value = 0
+            for stock in stocks:
+                try:
+                    price = StockPrice.objects.filter(
+                        stock=stock,
+                        date__lte=current_date
+                    ).order_by('-date').first()
+                    
+                    if price:
+                        total_value += float(price.close_price) * price.volume
+                except Exception as e:
+                    logger.warning(f"Error calculating money flow for {stock.symbol}: {str(e)}")
+                    continue
+            
+            dates.append(current_date.strftime('%Y-%m-%d'))
+            values.append(round(total_value / 1_000_000, 2))  # Convert to millions
+            
+            current_date += timedelta(days=1)
+        
+        return {
+            'dates': dates,
+            'values': values
+        }
+        
+    except Exception as e:
+        logger.error(f"Error calculating industry money flow: {str(e)}")
+        return {
+            'dates': [],
+            'values': []
+        }
 
 @login_required
 def check_data(request):
@@ -631,3 +787,156 @@ def refresh_data(request):
             messages.error(request, f'Error updating data: {str(e)}')
     return redirect('stock_analysis:check_data')
 
+def get_potential_stocks(stocks):
+    """Lấy danh sách cổ phiếu tiềm năng của ngành"""
+    potential_stocks = []
+    
+    for stock in stocks:
+        try:
+            score = 0
+            reasons = []
+            
+            # Lấy dữ liệu giá gần nhất
+            prices = StockPrice.objects.filter(stock=stock).order_by('-date')[:20]
+            
+            if prices.exists():
+                # Tính MA20
+                close_prices = [float(p.close_price) for p in prices]
+                ma20 = sum(close_prices) / len(close_prices)
+                current_price = float(prices[0].close_price)
+                
+                # Kiểm tra xu hướng
+                if current_price > ma20:
+                    score += 10
+                    reasons.append("Giá trên MA20")
+                
+                # Kiểm tra volume
+                recent_volumes = [p.volume for p in prices[:5]]
+                avg_volume = sum(recent_volumes) / len(recent_volumes)
+                if prices[0].volume > avg_volume * 1.2:  # Volume tăng 20%
+                    score += 5
+                    reasons.append("Khối lượng giao dịch tăng")
+                
+                # Kiểm tra momentum
+                if len(prices) >= 5:
+                    price_5d_ago = float(prices[4].close_price)
+                    change_5d = ((current_price - price_5d_ago) / price_5d_ago) * 100
+                    if change_5d > 0:
+                        score += 5
+                        reasons.append(f"Tăng {change_5d:.1f}% trong 5 ngày")
+            
+            # Thêm điểm cho blue-chips
+            if stock.symbol in ['VIC', 'VHM', 'VCB', 'BID', 'CTG', 'HPG', 'MSN', 'VNM', 'FPT', 'MWG']:
+                score += 10
+                reasons.append("Blue-chip")
+            
+            if score >= 10:  # Chỉ lấy c phiếu có điểm từ 10 trở lên
+                potential_stocks.append({
+                    'symbol': stock.symbol,
+                    'name': stock.name,
+                    'price': float(stock.current_price or 0),
+                    'market_cap': int(stock.market_cap or 0),
+                    'score': score,
+                    'reasons': reasons
+                })
+        
+        except Exception as e:
+            logger.error(f"Error analyzing potential stock {stock.symbol}: {str(e)}")
+            continue
+    
+    # Sắp xếp theo điểm và lấy top 3
+    potential_stocks.sort(key=lambda x: x['score'], reverse=True)
+    return potential_stocks[:3]
+
+@login_required
+def add_sample_data(request):
+    """Thêm dữ liệu mẫu vào portfolio"""
+    try:
+        portfolio_service = PortfolioService()
+        
+        # Tạo portfolio mới
+        portfolio = portfolio_service.create_portfolio(
+            user=request.user,
+            name="Danh mục mẫu",
+            description="Danh mục đầu tư mẫu với các blue-chip"
+        )
+        
+        # Thêm một số cổ phiếu mẫu
+        sample_stocks = [
+            {'symbol': 'VIC', 'quantity': 100, 'price': 50000},
+            {'symbol': 'VHM', 'quantity': 200, 'price': 45000},
+            {'symbol': 'VCB', 'quantity': 150, 'price': 85000},
+            {'symbol': 'FPT', 'quantity': 300, 'price': 75000},
+            {'symbol': 'MWG', 'quantity': 250, 'price': 40000}
+        ]
+        
+        for stock in sample_stocks:
+            portfolio_service.add_stock_to_portfolio(
+                portfolio=portfolio,
+                symbol=stock['symbol'],
+                quantity=stock['quantity'],
+                purchase_price=stock['price'],
+                purchase_date=timezone.now() - timedelta(days=30)
+            )
+        
+        messages.success(request, "Đã thêm dữ liệu mẫu thành công!")
+        return redirect('stock_analysis:portfolio_detail', pk=portfolio.id)
+        
+    except Exception as e:
+        messages.error(request, f"Lỗi khi thêm dữ liệu mẫu: {str(e)}")
+        return redirect('stock_analysis:portfolio_list')
+
+class PortfolioEditView(LoginRequiredMixin, UpdateView):
+    model = Portfolio
+    template_name = 'stock_analysis/portfolio_edit.html'
+    fields = ['name', 'description', 'benchmark_symbol']
+    
+    def get_success_url(self):
+        return reverse('stock_analysis:portfolio_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['segment'] = 'portfolio'
+        return context
+
+class PortfolioOptimizeView(LoginRequiredMixin, DetailView):
+    model = Portfolio
+    template_name = 'stock_analysis/portfolio_optimize.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        portfolio = self.get_object()
+        optimization_service = PortfolioOptimizationService()
+        
+        # Lấy mức độ rủi ro từ query params hoặc mặc định
+        risk_tolerance = self.request.GET.get('risk_tolerance', 'moderate')
+        
+        # Lấy kết quả tối ưu hóa
+        optimization_data = optimization_service.optimize_portfolio(
+            portfolio=portfolio,
+            risk_tolerance=risk_tolerance
+        )
+        
+        context.update({
+            'optimization_data': optimization_data,
+            'risk_tolerance': risk_tolerance,
+            'risk_options': [
+                ('conservative', 'Thận trọng'),
+                ('moderate', 'Cân bằng'),
+                ('aggressive', 'Tích cực')
+            ],
+            'segment': 'portfolio'
+        })
+        return context
+
+class PortfolioTransactionView(LoginRequiredMixin, DetailView):
+    model = Portfolio
+    template_name = 'stock_analysis/portfolio_transactions.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        portfolio = self.get_object()
+        context['transactions'] = PortfolioTransaction.objects.filter(
+            portfolio=portfolio
+        ).order_by('-date')
+        return context

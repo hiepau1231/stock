@@ -1,5 +1,6 @@
 {% extends "layouts/base.html" %}
 {% load humanize %}
+{% load stock_filters %}
 
 {% block title %}{{ portfolio.name }} - Chi tiết danh mục{% endblock %}
 
@@ -89,17 +90,26 @@
             <div class="row">
                 <div class="col-md-6">
                     <h4>Hiệu suất danh mục</h4>
-                    <p>{{ performance_data.portfolio_return|percentage }}</p>
+                    <p class="{% if performance_data.portfolio_return > 0 %}text-success{% elif performance_data.portfolio_return < 0 %}text-danger{% endif %}">
+                        {{ performance_data.portfolio_return|percentage }}
+                    </p>
                 </div>
                 <div class="col-md-6">
                     <h4>Hiệu suất {{ benchmark_name }}</h4>
-                    <p>{{ performance_data.benchmark_return|percentage }}</p>
+                    <p class="{% if performance_data.benchmark_return > 0 %}text-success{% elif performance_data.benchmark_return < 0 %}text-danger{% endif %}">
+                        {{ performance_data.benchmark_return|percentage }}
+                    </p>
                 </div>
             </div>
             <div class="row mt-4">
                 <div class="col-12">
                     <h4>Alpha</h4>
-                    <p>{{ performance_data.alpha|percentage }}</p>
+                    <p class="{% if performance_data.alpha > 0 %}text-success{% elif performance_data.alpha < 0 %}text-danger{% endif %}">
+                        {{ performance_data.alpha|percentage }}
+                    </p>
+                    <small class="text-muted">
+                        Alpha dương cho thấy danh mục có hiệu suất tốt hơn thị trường.
+                    </small>
                 </div>
             </div>
             <!-- Thêm biểu đồ so sánh ở đây -->
@@ -155,6 +165,61 @@
             {% else %}
             <p>Không đủ dữ liệu để tính toán chỉ số rủi ro</p>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Thêm button mở modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addTransactionModal">
+        <i class="ni ni-fat-add"></i> Thêm giao dịch
+    </button>
+
+    <!-- Modal thêm giao dịch -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="post" action="{% url 'stock_analysis:add_transaction' portfolio.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title">Thêm giao dịch mới</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Mã cổ phiếu</label>
+                            <select name="stock" class="form-control" required>
+                                {% for item in portfolio.portfolioitem_set.all %}
+                                <option value="{{ item.stock.id }}">{{ item.stock.symbol }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại giao dịch</label>
+                            <select name="transaction_type" class="form-control" required>
+                                <option value="BUY">Mua vào</option>
+                                <option value="SELL">Bán ra</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Số lượng</label>
+                            <input type="number" name="quantity" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Giá</label>
+                            <input type="number" name="price" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày giao dịch</label>
+                            <input type="datetime-local" name="date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Thêm giao dịch</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

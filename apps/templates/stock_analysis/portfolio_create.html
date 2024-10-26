@@ -1,16 +1,66 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Tạo danh mục đầu tư mới{% endblock %}
-
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Tạo danh mục đầu tư mới</h1>
-    
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Tạo danh mục</button>
-    </form>
-</div>
-{% endblock %}
+{% extends "layouts/base.html" %}
+
+{% load crispy_forms_tags %}
+
+
+
+{% block title %} Tạo danh mục mới {% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="row">
+
+        <div class="col-12">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h3 class="mb-0">Tạo danh mục đầu tư mới</h3>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+                        {{ form|crispy }}
+
+                        <div class="form-group mt-4">
+
+                            <button type="submit" class="btn btn-primary">
+
+                                <i class="ni ni-check-bold"></i> Tạo danh mục
+
+                            </button>
+
+                            <a href="{% url 'stock_analysis:portfolio_list' %}" class="btn btn-secondary">
+
+                                <i class="ni ni-bold-left"></i> Quay lại
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+

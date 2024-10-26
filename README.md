@@ -2,14 +2,25 @@
 
 Nền tảng phân tích chứng khoán sử dụng Django và yfinance API.
 
-## TÍNH NĂNG ĐÃ HOÀN THÀNH
-- Hiển thị dữ liệu thị trường realtime
-- Biểu đồ Candlestick và các chỉ báo kỹ thuật (RSI, MACD, Bollinger Bands)
-- Quản lý danh mục đầu tư cơ bản
-- Danh sách theo dõi cổ phiếu
-- Giao diện responsive
-- Tối ưu hiệu suất với caching
-- Cập nhật dữ liệu tự động
+## TÍNH NĂNG
+
+### Đã hoàn thành
+- ✅ Hiển thị dữ liệu thị trường realtime
+- ✅ Biểu đồ Candlestick và các chỉ báo kỹ thuật (RSI, MACD, Bollinger Bands)
+- ✅ Quản lý danh mục đầu tư
+- ✅ Danh sách theo dõi cổ phiếu
+- ✅ Giao diện responsive
+- ✅ Tối ưu hiệu suất với caching
+- ✅ Cập nhật dữ liệu tự động
+- ✅ Khuyến nghị đầu tư dựa trên phân tích kỹ thuật
+- ✅ Phân tích rủi ro danh mục
+- ✅ Xuất báo cáo PDF/Excel
+- ✅ Cảnh báo giá
+
+### Đang phát triển
+- 🔄 Phân tích ngành
+- 🔄 Dự đoán VNINDEX
+- 🔄 Phân tích và dự đoán từng mã
 
 ## CÀI ĐẶT
 
@@ -38,7 +49,7 @@ python manage.py collectstatic
 python manage.py runserver
 ```
 
-## CẬP NHẬT DỮ LIỆU TỰ ĐỘNG
+## CẬP NHẬT DỮ LIỆU
 
 ### Phương pháp 1: Sử dụng Management Command
 1. Chạy trực tiếp command:
@@ -73,6 +84,14 @@ celery -A core worker -l info
 celery -A core beat -l info
 ```
 
+## KIỂM TRA DỮ LIỆU
+
+Truy cập http://localhost:8000/stock/check-data/ để xem:
+- Thống kê tổng quan
+- Dữ liệu cổ phiếu gần đây
+- Lịch sử giá gần đây
+- Thời gian cập nhật cuối
+
 ## CẤU TRÚC THƯ MỤC
 
 ```
@@ -80,13 +99,15 @@ stock/
 ├── apps/                   # Chứa các ứng dụng Django
 ├── core/                   # Cấu hình Django
 ├── cline_docs/            # Tài liệu dự án
-└── staticfiles/           # Static files đã được collect
+└── staticfiles/           # Static files
+```
 
 ## API
 
 - /api/stock/<symbol>/ - Thông tin cổ phiếu
 - /api/stock/<symbol>/indicators/ - Chỉ báo kỹ thuật
 - /api/stock/<symbol>/historical/ - Dữ liệu lịch sử
+- /api/industry/<id>/ - Phân tích ngành
 
 ## CÔNG NGHỆ SỬ DỤNG
 
@@ -105,11 +126,20 @@ stock/
 - Nên sử dụng caching để giảm tải cho server
 - Theo dõi log để phát hiện lỗi khi cập nhật dữ liệu
 
-## LIÊN HỆ
+## ĐÓNG GÓP
 
-Email: example@email.com
-GitHub: github.com/username
+Mọi đóng góp đều được chào đón. Vui lòng:
+1. Fork dự án
+2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
+3. Commit thay đổi (`git commit -m 'Add some AmazingFeature'`)
+4. Push lên branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
 
 ## LICENSE
 
 MIT License
+
+## LIÊN HỆ
+
+Email: example@email.com
+GitHub: github.com/username

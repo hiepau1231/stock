@@ -17,58 +17,61 @@
 - ✅ Thêm tính năng cảnh báo giá
 - ✅ Cập nhật dữ liệu tự động với management command
 - ✅ Thêm loading indicators cho biểu đồ
-- ✅ Thêm tính năng xuất báo cáo PDF/Excel cho danh mục
-- ✅ Thêm biểu đồ phân bổ danh mục
-- ✅ Thêm thống kê hiệu suất danh mục theo thời gian
-- ✅ Thêm so sánh với benchmark (VN-Index)
-- ✅ Thêm phân tích rủi ro danh mục (Volatility, Sharpe Ratio, Beta, VaR)
 - ✅ Trang giới thiệu và hướng dẫn
-- ✅ Trang Cổ phiếu được khuyến nghị:
-  - ✅ Hiển thị 5 mã cổ phiếu được khuyến nghị
-  - ✅ Cập nhật chỉ số hiện tại mỗi tuần
-  - ✅ Thêm lý do khuyến nghị
-  - ✅ Thêm cron job cập nhật tuần qua Celery
+- ✅ Trang Cổ phiếu được khuyến nghị
+- ✅ Tạo cấu trúc cơ bản cho quản lý danh mục đầu tư
+- ✅ Thêm chức năng tạo và chỉnh sửa danh mục
+- ✅ Thêm tính năng tối ưu hóa danh mục
 
-## Cần làm tiếp theo thứ tự ưu tiên
+## Đang thực hiện
+1. Hoàn thiện quản lý danh mục đầu tư:
+   - [ ] Thêm chức năng xuất báo cáo PDF/Excel
+   - [ ] Thêm lịch sử giao dịch
+   - [ ] Thêm biểu đồ phân bổ tài sản
+   - [ ] Thêm phân tích rủi ro danh mục
+   - [ ] Thêm so sánh với VN-Index
+   - [ ] Thêm cảnh báo tỷ trọng
+   - [ ] Thêm chức năng import từ Excel
 
-1. Phân tích cổ phiếu theo ngành:
-   - Tạo thanh chọn ngành (11 ngành)
-   - Hiển thị danh sách cổ phiếu theo ngành và sàn
-   - Thêm biểu đồ phân tích dòng tiền
-   - Hiển thị 3 mã tiềm năng của ngành
-   (Đã có model Industry và StockIndustry, cần thêm data và logic)
+2. Hoàn thiện phân tích ngành:
+   - [ ] Fix lỗi hiển thị dữ liệu khi chọn ngành
+   - [ ] Thêm biểu đồ dòng tiền ngành
+   - [ ] Hoàn thiện phân loại cổ phiếu theo sàn
+   - [ ] Thêm tính năng so sánh giữa các ngành
+   - [ ] Thêm biểu đồ phân tích xu hướng ngành
 
-2. Phân tích và dự đoán VNINDEX:
+## Cần làm tiếp theo
+1. Phân tích và dự đoán VNINDEX:
    - Thêm thông tin và chỉ số hiện tại
    - Cập nhật dự đoán 1 tuần
    - Tự động cập nhật hàng tuần
    (Cần implement thuật toán dự đoán)
 
-3. Phân tích và dự đoán từng mã:
+2. Phân tích và dự đoán từng mã:
    - Thêm form chọn mã và thời gian dự đoán
    - Hiển thị thông tin chi tiết (P/E, EPS, etc.)
    - Thêm các biểu đồ phân tích
    - Thêm khuyến nghị mua/bán
    (Phần phức tạp nhất, cần nhiều thuật toán)
 
-## Chi tiết triển khai
+## Chi tiết triển khai danh mục đầu tư
+1. Xuất báo cáo:
+   - Tạo template PDF/Excel
+   - Thêm biểu đồ hiệu suất
+   - Thêm phân tích rủi ro
+   - Thêm so sánh benchmark
 
-### 1. Phân tích theo ngành (Ưu tiên 1):
-- Tạo data migration cho 11 ngành
-- Implement IndustryAnalysisService
-- Tạo template industry_analysis.html
-- Thêm biểu đồ dòng tiền ngành
+2. Lịch sử giao dịch:
+   - Tạo model PortfolioTransaction
+   - Thêm form nhập giao dịch
+   - Hiển thị lịch sử giao dịch
+   - Tính toán hiệu suất theo thời gian
 
-### 2. Dự đoán VNINDEX (Ưu tiên 2):
-- Implement PredictionService
-- Tạo template market_prediction.html
-- Thêm cron job cập nhật tuần
-
-## Ưu tiên
-1. Thêm gợi ý cân bằng danh mục
-2. Thêm thông báo email khi có biến động lớn
-3. Thêm phân tích cơ bản và kỹ thuật nâng cao
-4. Cải thiện UX/UI với dark mode và animations
+3. Phân tích rủi ro:
+   - Tính toán Sharpe Ratio
+   - Tính toán Beta
+   - Tính toán Value at Risk
+   - Tính toán Maximum Drawdown
 
 ## Lưu ý
 - Theo dõi giới hạn request của yfinance API

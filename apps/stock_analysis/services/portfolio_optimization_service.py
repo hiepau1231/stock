@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from .stock_service import StockService
+from ..models import StockPrice
 
 logger = logging.getLogger(__name__)
 
@@ -10,116 +11,145 @@ class PortfolioOptimizationService:
     def __init__(self):
         self.stock_service = StockService()
 
-    def get_portfolio_optimization(self, portfolio):
-        """Phân tích và đưa ra gợi ý cân bằng danh mục"""
+    def optimize_portfolio(self, portfolio, risk_tolerance='moderate'):
+        """Tối ưu hóa danh mục dựa trên Modern Portfolio Theory"""
         try:
-            # Lấy dữ liệu hiện tại của danh mục
-            current_holdings = {}
-            returns_data = {}
+            # Lấy danh sách cổ phiếu trong danh mục
+            portfolio_items = portfolio.portfolioitem_set.all()
+            symbols = [item.stock.symbol for item in portfolio_items]
             
-            for item in portfolio.portfolioitem_set.all():
-                current_holdings[item.stock.symbol] = {
-                    'weight': item.current_value / portfolio.current_value,
-                    'quantity': item.quantity
+            if not symbols:
+                return {
+                    'error': 'Portfolio is empty',
+                    'message': 'Không có cổ phiếu trong danh mục'
                 }
-                
-                # Lấy dữ liệu lịch sử để tính returns
-                hist_data = self.stock_service.get_stock_historical_data(item.stock.symbol)
-                if hist_data:
-                    prices = pd.DataFrame(hist_data)['close']
-                    returns_data[item.stock.symbol] = prices.pct_change().dropna()
 
-            if not returns_data:
-                return None
+            # Lấy dữ liệu lịch sử
+            returns_data = self._get_historical_returns(symbols)
+            if returns_data is None:
+                return {
+                    'error': 'Insufficient data',
+                    'message': 'Không đủ dữ liệu lịch sử để tối ưu hóa'
+                }
 
-            # Tạo DataFrame cho returns
-            returns_df = pd.DataFrame(returns_data)
+            # Tính toán ma trận hiệp phương sai và vector kỳ vọng lợi nhuận
+            returns_mean = returns_data.mean()
+            returns_cov = returns_data.cov()
+
+            # Thiết lập tham số tối ưu hóa dựa trên mức chấp nhận rủi ro
+            risk_params = {
+                'conservative': {'target_return': 0.10, 'max_weight': 0.3},
+                'moderate': {'target_return': 0.15, 'max_weight': 0.4},
+                'aggressive': {'target_return': 0.20, 'max_weight': 0.5}
+            }
+            params = risk_params.get(risk_tolerance, risk_params['moderate'])
+
+            # Tối ưu hóa
+            num_assets = len(symbols)
+            constraints = [
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1},  # Tổng trọng số = 1
+                {'type': 'ineq', 'fun': lambda x: x - 0.05},     # Trọng số tối thiểu 5%
+                {'type': 'ineq', 'fun': lambda x: params['max_weight'] - x}  # Trọng số tối đa
+            ]
             
-            # Tính toán optimal weights
-            optimal_weights = self._calculate_optimal_weights(returns_df)
+            bounds = tuple((0.05, params['max_weight']) for _ in range(num_assets))
             
-            # Tạo gợi ý điều chỉnh
+            # Hàm mục tiêu: Minimize risk (variance)
+            def objective(weights):
+                portfolio_std = np.sqrt(np.dot(weights.T, np.dot(returns_cov, weights)))
+                return portfolio_std
+
+            # Initial guess: equal weights
+            initial_weights = np.array([1/num_assets] * num_assets)
+            
+            # Tối ưu hóa
+            result = minimize(
+                objective,
+                initial_weights,
+                method='SLSQP',
+                bounds=bounds,
+                constraints=constraints
+            )
+
+            if not result.success:
+                return {
+                    'error': 'Optimization failed',
+                    'message': 'Không thể tìm được giải pháp tối ưu'
+                }
+
+            # Tính toán các chỉ số của danh mục tối ưu
+            optimized_weights = result.x
+            portfolio_return = np.sum(returns_mean * optimized_weights)
+            portfolio_risk = np.sqrt(np.dot(optimized_weights.T, np.dot(returns_cov, optimized_weights)))
+            
+            # Tạo kết quả
             recommendations = []
-            for symbol in optimal_weights:
-                current_weight = current_holdings[symbol]['weight']
-                optimal_weight = optimal_weights[symbol]
-                diff = optimal_weight - current_weight
+            current_weights = self._get_current_weights(portfolio_items)
+            
+            for i, symbol in enumerate(symbols):
+                current_weight = current_weights.get(symbol, 0)
+                target_weight = optimized_weights[i]
                 
-                if abs(diff) > 0.05:  # Chỉ gợi ý khi chênh lệch > 5%
-                    action = 'tăng' if diff > 0 else 'giảm'
+                if abs(target_weight - current_weight) > 0.05:  # Chỉ đề xuất khi chênh lệch > 5%
+                    action = 'Tăng' if target_weight > current_weight else 'Giảm'
+                    change = abs(target_weight - current_weight) * 100
+                    
                     recommendations.append({
                         'symbol': symbol,
-                        'current_weight': current_weight,
-                        'optimal_weight': optimal_weight,
+                        'current_weight': current_weight * 100,
+                        'target_weight': target_weight * 100,
                         'action': action,
-                        'adjustment': abs(diff),
-                        'reason': self._get_adjustment_reason(symbol, diff, returns_df)
+                        'change': change
                     })
 
             return {
-                'current_weights': current_holdings,
-                'optimal_weights': optimal_weights,
+                'success': True,
+                'portfolio_return': portfolio_return * 100,
+                'portfolio_risk': portfolio_risk * 100,
+                'sharpe_ratio': (portfolio_return - 0.05) / portfolio_risk,  # Assuming risk-free rate = 5%
                 'recommendations': recommendations
             }
 
         except Exception as e:
             logger.error(f"Error optimizing portfolio: {str(e)}")
-            return None
+            return {
+                'error': 'Optimization error',
+                'message': str(e)
+            }
 
-    def _calculate_optimal_weights(self, returns_df):
-        """Tính toán trọng số tối ưu sử dụng Modern Portfolio Theory"""
+    def _get_historical_returns(self, symbols, days=252):
+        """Lấy dữ liệu lợi nhuận lịch sử"""
         try:
-            # Tính expected returns và covariance matrix
-            mu = returns_df.mean()
-            cov = returns_df.cov()
+            returns_data = {}
             
-            # Số lượng cổ phiếu
-            n = len(returns_df.columns)
+            for symbol in symbols:
+                prices = StockPrice.objects.filter(
+                    stock__symbol=symbol
+                ).order_by('-date')[:days]
+                
+                if prices.count() < days/2:  # Yêu cầu ít nhất 50% số ngày
+                    return None
+                
+                # Tính lợi nhuận hàng ngày
+                prices_list = list(prices.values_list('close_price', flat=True))
+                prices_list.reverse()
+                returns = pd.Series(prices_list).pct_change().dropna()
+                returns_data[symbol] = returns
             
-            # Hàm mục tiêu: Maximize Sharpe Ratio
-            def objective(weights):
-                portfolio_return = np.sum(mu * weights)
-                portfolio_std = np.sqrt(np.dot(weights.T, np.dot(cov, weights)))
-                return -portfolio_return/portfolio_std  # Negative vì minimize
-            
-            # Constraints
-            constraints = (
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1},  # Weights sum to 1
-            )
-            bounds = tuple((0, 1) for _ in range(n))  # 0 <= weight <= 1
-            
-            # Initial guess: equal weights
-            initial_weights = np.array([1/n] * n)
-            
-            # Optimize
-            result = minimize(objective, initial_weights,
-                            method='SLSQP',
-                            bounds=bounds,
-                            constraints=constraints)
-            
-            # Return as dictionary
-            return dict(zip(returns_df.columns, result.x))
+            return pd.DataFrame(returns_data)
             
         except Exception as e:
-            logger.error(f"Error calculating optimal weights: {str(e)}")
+            logger.error(f"Error getting historical returns: {str(e)}")
             return None
 
-    def _get_adjustment_reason(self, symbol, weight_diff, returns_df):
-        """Tạo lý do cho gợi ý điều chỉnh"""
-        try:
-            returns = returns_df[symbol]
+    def _get_current_weights(self, portfolio_items):
+        """Tính trọng số hiện tại của danh mục"""
+        total_value = sum(item.current_value for item in portfolio_items)
+        if total_value == 0:
+            return {}
             
-            if weight_diff > 0:
-                if returns.mean() > returns_df.mean().mean():
-                    return f"Cổ phiếu {symbol} có hiệu suất tốt hơn trung bình danh mục"
-                else:
-                    return f"Tăng {symbol} để cân bằng rủi ro danh mục"
-            else:
-                if returns.std() > returns_df.std().mean():
-                    return f"Giảm {symbol} để giảm rủi ro danh mục"
-                else:
-                    return f"Điều chỉnh {symbol} để tối ưu hiệu suất"
-                    
-        except Exception as e:
-            logger.error(f"Error getting adjustment reason: {str(e)}")
-            return "Điều chỉnh để tối ưu danh mục"
+        weights = {}
+        for item in portfolio_items:
+            weights[item.stock.symbol] = float(item.current_value) / total_value
+            
+        return weights

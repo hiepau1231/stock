@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     
     # Third party apps
     'crispy_forms',
+    'crispy_bootstrap4',
     
     # Local apps
     'apps.home',
@@ -151,6 +152,7 @@ LOGGING = {
 
 # Third party apps configuration
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STOCK_DATA_CACHE_TIMEOUT = 300  # 5 minutes

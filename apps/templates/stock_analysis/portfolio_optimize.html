@@ -1,0 +1,83 @@
+{% extends "layouts/base.html" %}
+{% load stock_filters %}
+{% block title %} Tối ưu hóa danh mục {% endblock %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Tối ưu hóa danh mục: {{ portfolio.name }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-4">
+                        <div class="form-group">
+                            <label>Mức độ chấp nhận rủi ro:</label>
+                            <select name="risk_tolerance" class="form-control" onchange="this.form.submit()">
+                                {% for value, label in risk_options %}
+                                <option value="{{ value }}" {% if risk_tolerance == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                    {% if optimization_data.error %}
+                    <div class="alert alert-warning">{{ optimization_data.message }}</div>
+                    {% else %}
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card card-stats">
+                                <div class="card-body">
+                                    <h5 class="card-title">Lợi nhuận kỳ vọng</h5>
+                                    <p class="card-text">{{ optimization_data.portfolio_return|percentage }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card card-stats">
+                                <div class="card-body">
+                                    <h5 class="card-title">Rủi ro danh mục</h5>
+                                    <p class="card-text">{{ optimization_data.portfolio_risk|percentage }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card card-stats">
+                                <div class="card-body">
+                                    <h5 class="card-title">Sharpe Ratio</h5>
+                                    <p class="card-text">{{ optimization_data.sharpe_ratio|floatformat:2 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive mt-4">
+                        <h4>Đề xuất điều chỉnh</h4>
+                        <table class="table align-items-center">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Mã CK</th>
+                                    <th>Tỷ trọng hiện tại</th>
+                                    <th>Tỷ trọng đề xuất</th>
+                                    <th>Hành động</th>
+                                    <th>Mức thay đổi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in optimization_data.recommendations %}
+                                <tr>
+                                    <td>{{ rec.symbol }}</td>
+                                    <td>{{ rec.current_weight|percentage }}</td>
+                                    <td>{{ rec.target_weight|percentage }}</td>
+                                    <td class="{% if rec.action == 'Tăng' %}text-success{% else %}text-danger{% endif %}">{{ rec.action }}</td>
+                                    <td>{{ rec.change|percentage }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

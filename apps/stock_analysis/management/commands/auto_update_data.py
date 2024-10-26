@@ -30,7 +30,7 @@ class Command(BaseCommand):
             'Chứng khoán': ['SSI', 'VND', 'HCM', 'VCI'],
             'Bảo hiểm': ['BVH', 'BMI'],
             'Dầu khí': ['GAS', 'PLX', 'PVD'],
-            'Xây dựng': ['CTD', 'HBC', 'VCG'],
+            'Xây dựng': ['CTD', 'VCG'],  # Bỏ HBC vì đã delisted
             'Thép': ['HPG', 'HSG', 'NKG'],
             'Điện': ['POW', 'PPC', 'NT2'],
             'Công nghệ': ['FPT', 'CMG'],

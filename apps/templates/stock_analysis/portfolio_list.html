@@ -1,40 +1,210 @@
-{% extends "base.html" %}
-{% load static %}
-
+{% extends "layouts/base.html" %}
+{% load stock_filters %}
 {% block title %} Danh mục đầu tư {% endblock %}
-
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Danh mục đầu tư của bạn</h1>
-    
-    <a href="{% url 'stock_analysis:portfolio_create' %}" class="btn btn-primary mb-3">Tạo danh mục mới</a>
-
-    {% if portfolios %}
-        <div class="row">
-            {% for portfolio in portfolios %}
-                <div class="col-md-4 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ portfolio.name }}</h5>
-                            <p class="card-text">Số lượng cổ phiếu: {{ portfolio.portfolioitem_set.count }}</p>
-                            <a href="{% url 'stock_analysis:portfolio_detail' portfolio.id %}" class="btn btn-info">Xem chi tiết</a>
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <h6 class="h2 text-white d-inline-block mb-0">Danh mục đầu tư</h6>
+                    </div>
+                    <div class="col-lg-6 col-5 text-right">
+                        <a href="{% url 'stock_analysis:portfolio_create' %}" class="btn btn-sm btn-neutral">
+                            <i class="ni ni-fat-add"></i> Tạo danh mục mới
+                        </a>
+                    </div>
+                </div>
+                <!-- Thống kê tổng quan -->
+                <div class="row">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-stats">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Tổng giá trị</h5>
+                                        <span class="h2 font-weight-bold mb-0">{{ total_value|format_price }}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
+                                            <i class="ni ni-money-coins"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-stats">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Lợi nhuận/Lỗ</h5>
+                                        <span class="h2 font-weight-bold mb-0 {% if total_profit > 0 %}text-success{% elif total_profit < 0 %}text-danger{% endif %}">
+                                            {{ total_profit|format_change }}
+                                        </span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
+                                            <i class="ni ni-chart-bar-32"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-stats">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Số danh mục</h5>
+                                        <span class="h2 font-weight-bold mb-0">{{ object_list|length }}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-info text-white rounded-circle shadow">
+                                            <i class="ni ni-collection"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-stats">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title text-uppercase text-muted mb-0">Hiệu suất TB</h5>
+                                        <span class="h2 font-weight-bold mb-0">{{ avg_performance|percentage }}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
+                                            <i class="ni ni-chart-pie-35"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        {% if not object_list %}
+        <div class="text-center mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Chưa có danh mục đầu tư nào</h4>
+                    <p class="text-muted">Bắt đầu bằng cách tạo danh mục mới hoặc sử dụng dữ liệu mẫu</p>
+                    <div class="mt-4">
+                        <a href="{% url 'stock_analysis:portfolio_create' %}" class="btn btn-primary">
+                            <i class="ni ni-fat-add"></i> Tạo danh mục mới
+                        </a>
+                        <a href="{% url 'stock_analysis:add_sample_data' %}" class="btn btn-info">
+                            <i class="ni ni-collection"></i> Thêm dữ liệu mẫu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            {% for portfolio in object_list %}
+            <div class="col-lg-6 col-xl-4">
+                <div class="card">
+                    <!-- Card header -->
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h3 class="mb-0">
+                                    <a href="{% url 'stock_analysis:portfolio_detail' portfolio.id %}">{{ portfolio.name }}</a>
+                                </h3>
+                            </div>
+                            <div class="col text-right">
+                                <div class="dropdown">
+                                    <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                                        <a class="dropdown-item" href="{% url 'stock_analysis:portfolio_detail' portfolio.id %}">
+                                            <i class="ni ni-zoom-split-in"></i> Chi tiết
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'stock_analysis:portfolio_edit' portfolio.id %}">
+                                            <i class="ni ni-settings"></i> Chỉnh sửa
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'stock_analysis:portfolio_optimize' portfolio.id %}">
+                                            <i class="ni ni-chart-bar-32"></i> Tối ưu hóa
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmDelete('{{ portfolio.id }}')">
+                                            <i class="ni ni-fat-remove"></i> Xóa
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card body -->
+                    <div class="card-body">
+                        <!-- Thông tin cơ bản -->
+                        <div class="mb-4">
+                            <small class="text-muted">Giá trị hiện tại:</small>
+                            <h2 class="mb-1">{{ portfolio.current_value|format_price }}</h2>
+                            <div class="d-flex align-items-center">
+                                <span class="{% if portfolio.current_value > portfolio.initial_value %}text-success{% elif portfolio.current_value < portfolio.initial_value %}text-danger{% endif %} mr-2">
+                                    {{ portfolio.current_value|subtract:portfolio.initial_value|format_change }}
+                                </span>
+                                <small class="text-muted">từ {{ portfolio.initial_value|format_price }}</small>
+                            </div>
+                        </div>
+                        <!-- Phân bổ tài sản -->
+                        <div class="mb-4">
+                            <h4 class="mb-3">Phân bổ tài sản</h4>
+                            <div class="progress-wrapper">
+                                {% for item in portfolio.portfolioitem_set.all|slice:":3" %}
+                                <div class="progress-info">
+                                    <div class="progress-label">
+                                        <span>{{ item.stock.symbol }}</span>
+                                    </div>
+                                    <div class="progress-percentage">
+                                        <span>{{ item.current_value|percentage_of:portfolio.current_value }}</span>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-gradient-primary" role="progressbar" style="width: {{ item.current_value|percentage_of_raw:portfolio.current_value }}%" aria-valuenow="{{ item.current_value|percentage_of_raw:portfolio.current_value }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <!-- Footer -->
+                        <div class="row">
+                            <div class="col">
+                                <small class="text-muted">Cập nhật: {{ portfolio.updated_at|date:"H:i d/m/Y" }}</small>
+                            </div>
+                            <div class="col text-right">
+                                <a href="{% url 'stock_analysis:portfolio_detail' portfolio.id %}" class="btn btn-sm btn-primary">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
         </div>
-    {% else %}
-        <p>Bạn chưa có danh mục đầu tư nào. Hãy tạo danh mục mới!</p>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
-{% endblock content %}
-
-{% block javascripts %}
+{% endblock %}
+{% block extra_js %}
 <script>
-function deletePortfolio(portfolioId) {
+function confirmDelete(portfolioId) {
     if (confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
-        window.location.href = `/portfolio/${portfolioId}/delete/`;
+        window.location.href = `/stock/portfolio/${portfolioId}/delete/`;
     }
 }
 </script>
-{% endblock javascripts %}
+{% endblock %}

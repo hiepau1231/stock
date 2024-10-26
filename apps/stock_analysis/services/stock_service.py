@@ -18,25 +18,43 @@ class StockService:
     def get_stock_data(self, symbol, start_date=None, end_date=None):
         """Get stock data from yfinance"""
         try:
-            logger.info(f"Getting data for {symbol}")
+            cache_key = f'stock_data_{symbol}'
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return cached_data
+
             ticker = yf.Ticker(f"{symbol}.VN")
-            today_data = ticker.history(period='1d')
-            logger.info(f"Today's data: {today_data}")
             
-            if not today_data.empty:
-                current_price = float(today_data['Close'].iloc[-1])
-                logger.info(f"Current price from history: {current_price}")
-            else:
-                info = ticker.info
-                logger.info(f"Info data: {info}")
-                current_price = info.get('regularMarketPrice', 0)
-                logger.info(f"Current price from info: {current_price}")
-            
-            # Xử lý NaN values
-            current_price = 0 if pd.isna(current_price) else float(current_price)
-            change = 0 if pd.isna(change) else float(change)
-            percent_change = 0 if pd.isna(percent_change) else float(percent_change)
-            volume = 0 if pd.isna(volume) else int(volume)
+            try:
+                # Lấy dữ liệu gần nhất
+                today_data = ticker.history(period='1d')
+                if not today_data.empty:
+                    current_price = float(today_data['Close'].iloc[-1])
+                    open_price = float(today_data['Open'].iloc[-1])
+                    change = current_price - open_price
+                    percent_change = (change / open_price) * 100 if open_price != 0 else 0
+                    volume = int(today_data['Volume'].iloc[-1])
+                else:
+                    raise ValueError("No data available")
+                    
+            except Exception as e:
+                logger.warning(f"Error getting live data for {symbol}: {str(e)}")
+                # Fallback to database
+                latest_price = StockPrice.objects.filter(
+                    stock__symbol=symbol
+                ).order_by('-date').first()
+                
+                if latest_price:
+                    current_price = float(latest_price.close_price)
+                    open_price = float(latest_price.open_price)
+                    change = current_price - open_price
+                    percent_change = (change / open_price) * 100 if open_price != 0 else 0
+                    volume = int(latest_price.volume)
+                else:
+                    current_price = 0
+                    change = 0
+                    percent_change = 0
+                    volume = 0
 
             stock_data = {
                 'symbol': symbol,
@@ -52,7 +70,13 @@ class StockService:
 
         except Exception as e:
             logger.error(f"Error in get_stock_data for {symbol}: {str(e)}")
-            return None
+            return {
+                'symbol': symbol,
+                'price': 0,
+                'change': 0,
+                'change_percent': 0,
+                'volume': 0
+            }
 
     def get_historical_data(self, symbol, start_date=None, end_date=None):
         """Get historical stock data from yfinance"""
@@ -67,6 +91,32 @@ class StockService:
             df = ticker.history(start=start_date, end=end_date)
             
             if df.empty:
+                # Thử lấy dữ liệu từ database
+                historical_prices = StockPrice.objects.filter(
+                    stock__symbol=symbol,
+                    date__range=[start_date, end_date]
+                ).order_by('date')
+                
+                if historical_prices.exists():
+                    data = {
+                        'Date': [],
+                        'Open': [],
+                        'High': [],
+                        'Low': [],
+                        'Close': [],
+                        'Volume': []
+                    }
+                    
+                    for price in historical_prices:
+                        data['Date'].append(price.date)
+                        data['Open'].append(float(price.open_price))
+                        data['High'].append(float(price.high_price))
+                        data['Low'].append(float(price.low_price))
+                        data['Close'].append(float(price.close_price))
+                        data['Volume'].append(int(price.volume))
+                    
+                    return pd.DataFrame(data)
+                
                 logger.warning(f"No historical data found for symbol {symbol}")
                 return None
                 
@@ -298,26 +348,57 @@ class StockService:
             
     def calculate_portfolio_performance(self, portfolio):
         """Tính toán hiệu suất danh mục so với benchmark"""
-        # Lấy dữ liệu benchmark
-        benchmark_data = self.get_benchmark_data(
-            symbol=portfolio.benchmark_symbol,
-            start_date=portfolio.created_at
-        )
-        
-        # Tính toán return của danh mục
-        portfolio_return = (portfolio.current_value - portfolio.initial_value) / portfolio.initial_value
-        
-        # Tính toán return của benchmark
-        if benchmark_data is not None and not benchmark_data.empty:
-            benchmark_return = (benchmark_data['Close'][-1] - benchmark_data['Close'][0]) / benchmark_data['Close'][0]
-        else:
-            benchmark_return = 0
-            
-        return {
-            'portfolio_return': portfolio_return,
-            'benchmark_return': benchmark_return,
-            'alpha': portfolio_return - benchmark_return
-        }
+        try:
+            # Kiểm tra initial_value
+            if portfolio.initial_value == 0:
+                return {
+                    'portfolio_return': 0,
+                    'benchmark_return': 0,
+                    'alpha': 0,
+                    'message': 'Portfolio has no initial value'
+                }
+
+            # Lấy dữ liệu benchmark
+            try:
+                benchmark_data = self.get_benchmark_data(
+                    symbol=portfolio.benchmark_symbol,
+                    start_date=portfolio.created_at
+                )
+                
+                # Tính toán return của danh mục
+                portfolio_return = float((portfolio.current_value - portfolio.initial_value) / portfolio.initial_value) * 100
+                
+                # Tính toán return của benchmark
+                if benchmark_data is not None and not benchmark_data.empty:
+                    first_price = float(benchmark_data['Close'].iloc[0])
+                    last_price = float(benchmark_data['Close'].iloc[-1])
+                    benchmark_return = ((last_price - first_price) / first_price) * 100
+                else:
+                    benchmark_return = 0
+                    
+                return {
+                    'portfolio_return': round(portfolio_return, 2),
+                    'benchmark_return': round(benchmark_return, 2),
+                    'alpha': round(portfolio_return - benchmark_return, 2)
+                }
+                
+            except Exception as e:
+                logger.error(f"Error calculating benchmark return: {str(e)}")
+                return {
+                    'portfolio_return': round(portfolio_return, 2),
+                    'benchmark_return': 0,
+                    'alpha': round(portfolio_return, 2),
+                    'error': str(e)
+                }
+                
+        except Exception as e:
+            logger.error(f"Error calculating portfolio performance: {str(e)}")
+            return {
+                'portfolio_return': 0,
+                'benchmark_return': 0,
+                'alpha': 0,
+                'error': str(e)
+            }
 
     def calculate_portfolio_risk(self, portfolio):
         """Tính toán các chỉ số rủi ro cho danh mục"""
@@ -422,6 +503,9 @@ class StockService:
             return None
 
     # Bạn có thể thêm các phương thức khác nếu cần
+
+
+
 
 
 
