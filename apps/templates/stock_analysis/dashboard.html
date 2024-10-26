@@ -8,129 +8,179 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-    <div class="container-fluid mt-4">
+    <div class="container-fluid py-4">
         <!-- Market Overview -->
         <div class="row">
-            {% for index in market_overview.indices %}
-            <div class="col-xl-3 col-md-6">
-                <div class="card card-stats">
-                    <div class="card-body">
+            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                <div class="card">
+                    <div class="card-body p-3">
                         <div class="row">
-                            <div class="col">
-                                <h5 class="card-title text-uppercase text-muted mb-0">{{ index.symbol }}</h5>
-                                <span class="h2 font-weight-bold mb-0">{{ index.price|format_price }}</span>
+                            <div class="col-8">
+                                <div class="numbers">
+                                    <p class="text-sm mb-0 text-capitalize font-weight-bold">VN-Index</p>
+                                    <h5 class="font-weight-bolder mb-0">
+                                        {% if market_overview %}
+                                            {{ market_overview.vnindex|floatformat:2 }}
+                                            <span class="text-{% if market_overview.vnindex_change > 0 %}success{% else %}danger{% endif %} text-sm font-weight-bolder">
+                                                {{ market_overview.vnindex_change|floatformat:2 }}%
+                                            </span>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </h5>
+                                </div>
                             </div>
-                            <div class="col-auto">
-                                <div class="icon icon-shape bg-gradient-primary text-white rounded-circle shadow">
-                                    <i class="ni ni-chart-bar-32"></i>
+                            <div class="col-4 text-end">
+                                <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                    <i class="ni ni-money-coins text-lg opacity-10" aria-hidden="true"></i>
                                 </div>
                             </div>
                         </div>
-                        <p class="mt-3 mb-0 text-sm">
-                            <span class="text-{% if index.change > 0 %}success{% elif index.change < 0 %}danger{% else %}warning{% endif %} mr-2">
-                                {{ index.change }}
-                            </span>
-                        </p>
                     </div>
                 </div>
             </div>
-            {% endfor %}
+
+            <!-- Thêm các thông tin khác -->
+            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="numbers">
+                                    <p class="text-sm mb-0 text-capitalize font-weight-bold">Khối lượng</p>
+                                    <h5 class="font-weight-bolder mb-0">
+                                        {% if market_overview %}
+                                            {{ market_overview.volume|intcomma }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                    <i class="ni ni-paper-diploma text-lg opacity-10" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thêm các metrics khác tương tự -->
         </div>
 
-        <!-- Market Statistics -->
+        <!-- Top Gainers & Losers -->
         <div class="row mt-4">
-            <div class="col-xl-8">
+            <div class="col-lg-6 mb-lg-0 mb-4">
                 <div class="card">
-                    <div class="card-header border-0">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h3 class="mb-0">Top Gainers/Losers</h3>
-                            </div>
-                        </div>
+                    <div class="card-header pb-0">
+                        <h6>Top Tăng Giá</h6>
                     </div>
-                    <div class="table-responsive">
-                        <!-- Top Gainers -->
-                        <table class="table align-items-center table-flush">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th scope="col">Symbol</th>
-                                    <th scope="col">Price</th>
-                                    <th scope="col">Change</th>
-                                    <th scope="col">Volume</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for stock in top_gainers %}
-                                <tr>
-                                    <td>{{ stock.symbol }}</td>
-                                    <td>{{ stock.price|format_price }}</td>
-                                    <td class="text-success">
-                                        {{ stock.change_percent|format_percent }}
-                                    </td>
-                                    <td>{{ stock.volume|format_volume }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mã CP</th>
+                                        <th>Giá</th>
+                                        <th>Thay đổi (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stock in top_gainers %}
+                                    <tr>
+                                        <td>{{ stock.symbol }}</td>
+                                        <td>{{ stock.price }}</td>
+                                        <td class="text-success">+{{ stock.change_percent }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-xl-4">
+            
+            <div class="col-lg-6">
                 <div class="card">
-                    <div class="card-header border-0">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h3 class="mb-0">Market Statistics</h3>
-                            </div>
-                        </div>
+                    <div class="card-header pb-0">
+                        <h6>Top Giảm Giá</h6>
                     </div>
-                    <div class="card-body">
-                        <div class="chart">
-                            <!-- Market stats here -->
-                            <div class="d-flex justify-content-between">
-                                <div>Advancing: <span class="text-success">{{ market_overview.stats.up_stocks }}</span></div>
-                                <div>Declining: <span class="text-danger">{{ market_overview.stats.down_stocks }}</span></div>
-                                <div>Unchanged: <span class="text-warning">{{ market_overview.stats.unchanged_stocks }}</span></div>
-                            </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mã CP</th>
+                                        <th>Giá</th>
+                                        <th>Thay đổi (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stock in top_losers %}
+                                    <tr>
+                                        <td>{{ stock.symbol }}</td>
+                                        <td>{{ stock.price }}</td>
+                                        <td class="text-danger">{{ stock.change_percent }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Industry Overview -->
+        <!-- Portfolio Performance -->
+        {% if portfolio_performance %}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header border-0">
-                        <h3 class="mb-0">Industry Overview</h3>
+                    <div class="card-header pb-0">
+                        <h6>Hiệu Suất Danh Mục</h6>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table align-items-center table-flush">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Industry</th>
-                                    <th>Market Cap</th>
-                                    <th>Stocks</th>
-                                    <th>Top Companies</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for industry in industry_overview %}
-                                <tr>
-                                    <td>{{ industry.name }}</td>
-                                    <td>{{ industry.total_market_cap|format_price }}</td>
-                                    <td>{{ industry.stock_count }}</td>
-                                    <td>
-                                        {% for stock in industry.top_stocks %}
-                                        <span class="badge badge-primary">{{ stock.symbol }}</span>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="card-body p-3">
+                        <div class="chart">
+                            <canvas id="portfolio-chart" class="chart-canvas" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recommendations -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Khuyến Nghị Mới Nhất</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mã CP</th>
+                                        <th>Khuyến Nghị</th>
+                                        <th>Giá Mục Tiêu</th>
+                                        <th>Ngày</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rec in recommendations %}
+                                    <tr>
+                                        <td>{{ rec.symbol }}</td>
+                                        <td>{{ rec.recommendation }}</td>
+                                        <td>{{ rec.target_price }}</td>
+                                        <td>{{ rec.date }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -146,6 +196,25 @@
 
 {% block javascripts %}
 <script>
-  // Thêm các chart và visualization ở đây nếu cần
+  // Portfolio Chart
+  {% if portfolio_performance %}
+  var ctx = document.getElementById("portfolio-chart").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: {{ portfolio_performance.dates|safe }},
+      datasets: [{
+        label: "Giá trị danh mục",
+        data: {{ portfolio_performance.values|safe }},
+        borderColor: "#5e72e4",
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+    }
+  });
+  {% endif %}
 </script>
 {% endblock javascripts %}

@@ -196,3 +196,47 @@ class RecommendationService:
             reasons.append("Giá dưới Bollinger Band dưới, có thể phục hồi")
 
         return reasons
+
+    def get_latest_recommendations(self, limit=5):
+        """Lấy các khuyến nghị mới nhất"""
+        cache_key = f'latest_recommendations_{limit}'
+        data = cache.get(cache_key)
+        
+        if not data:
+            data = [
+                {
+                    'symbol': 'VNM',
+                    'recommendation': 'Mua',
+                    'target_price': 85000,
+                    'date': '2024-03-20'
+                },
+                {
+                    'symbol': 'VIC',
+                    'recommendation': 'Nắm giữ',
+                    'target_price': 75000,
+                    'date': '2024-03-20'
+                },
+                {
+                    'symbol': 'FPT',
+                    'recommendation': 'Mua',
+                    'target_price': 95000,
+                    'date': '2024-03-19'
+                },
+                {
+                    'symbol': 'MWG',
+                    'recommendation': 'Tích lũy',
+                    'target_price': 45000,
+                    'date': '2024-03-19'
+                },
+                {
+                    'symbol': 'HPG',
+                    'recommendation': 'Mua',
+                    'target_price': 28000,
+                    'date': '2024-03-18'
+                }
+            ]
+            
+            cache.set(cache_key, data, 3600)  # Cache 1 hour
+            
+        return data[:limit]
+

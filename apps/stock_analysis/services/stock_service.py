@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from ..models import Stock, StockPrice, HistoricalData, MarketIndex, Industry
 from django.utils import timezone
 import numpy as np
+from django.db.models import Max, F
 
 logger = logging.getLogger(__name__)
 
@@ -133,82 +134,118 @@ class StockService:
     def get_market_overview(self):
         """Lấy tổng quan thị trường"""
         try:
-            # Lấy dữ liệu từ MarketIndex
-            indices = MarketIndex.objects.all()
-            market_data = []
+            cache_key = 'market_overview'
+            data = cache.get(cache_key)
             
-            for index in indices:
-                market_data.append({
-                    'symbol': index.name,
-                    'price': float(index.value),
-                    'change': index.change,
-                })
+            if not data:
+                # Dữ liệu mẫu
+                data = {
+                    'vnindex': 1153.40,
+                    'vnindex_change': 1.37,
+                    'volume': 543789123,
+                    'chart_data': {
+                        'labels': ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                        'values': [1050, 1100, 1150, 1200, 1180, 1220, 1240, 1260, 1280]
+                    }
+                }
+                
+                try:
+                    # Thử lấy dữ liệu thật từ yfinance
+                    vnindex = yf.Ticker("^VNINDEX")
+                    current_data = vnindex.history(period="1d")
+                    historical_data = vnindex.history(period="1y")
+                    
+                    if not current_data.empty and not historical_data.empty:
+                        current_price = current_data['Close'].iloc[-1]
+                        open_price = current_data['Open'].iloc[-1]
+                        change_percent = ((current_price - open_price) / open_price) * 100
+                        
+                        data = {
+                            'vnindex': round(current_price, 2),
+                            'vnindex_change': round(change_percent, 2),
+                            'volume': int(current_data['Volume'].iloc[-1]),
+                            'chart_data': {
+                                'labels': historical_data.index.strftime('%b').tolist(),
+                                'values': historical_data['Close'].tolist()
+                            }
+                        }
+                    else:
+                        logger.warning("No data found for VN-Index, using default values")
+                except Exception as e:
+                    logger.error(f"Error getting live market data: {str(e)}")
+                    
+                # Cache trong 5 phút
+                cache.set(cache_key, data, 300)
             
-            # Thêm thống kê thị trường
-            total_stocks = Stock.objects.count()
-            up_stocks = Stock.objects.filter(percent_change__gt=0).count()
-            down_stocks = Stock.objects.filter(percent_change__lt=0).count()
-            
-            market_stats = {
-                'total_stocks': total_stocks,
-                'up_stocks': up_stocks,
-                'down_stocks': down_stocks,
-                'unchanged_stocks': total_stocks - up_stocks - down_stocks,
-                'total_value': Stock.objects.aggregate(
-                    total=models.Sum('market_cap')
-                )['total'] or 0
-            }
-            
-            return {
-                'indices': market_data,
-                'stats': market_stats
-            }
+            return data
+
         except Exception as e:
             logger.error(f"Error getting market overview: {str(e)}")
-            return None
-
-    def get_top_movers(self, limit=5):
-        """Lấy top cổ phiếu tăng/giảm mạnh nhất"""
-        try:
-            stocks = Stock.objects.all()
-            
-            # Lọc và sắp xếp theo phần trăm thay đổi
-            gainers = sorted(
-                [s for s in stocks if s.percent_change is not None and s.percent_change > 0],
-                key=lambda x: x.percent_change,
-                reverse=True
-            )[:limit]
-            
-            losers = sorted(
-                [s for s in stocks if s.percent_change is not None and s.percent_change < 0],
-                key=lambda x: x.percent_change
-            )[:limit]
-            
             return {
-                'top_gainers': [
-                    {
-                        'symbol': stock.symbol,
-                        'name': stock.name,
-                        'price': stock.current_price,
-                        'change': stock.change,
-                        'change_percent': stock.percent_change,
-                        'volume': stock.volume
-                    } for stock in gainers
-                ],
-                'top_losers': [
-                    {
-                        'symbol': stock.symbol,
-                        'name': stock.name,
-                        'price': stock.current_price,
-                        'change': stock.change,
-                        'change_percent': stock.percent_change,
-                        'volume': stock.volume
-                    } for stock in losers
-                ]
+                'vnindex': 1153.40,
+                'vnindex_change': 1.37,
+                'volume': 543789123,
+                'chart_data': {
+                    'labels': ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                    'values': [1050, 1100, 1150, 1200, 1180, 1220, 1240, 1260, 1280]
+                }
             }
-        except Exception as e:
-            logger.error(f"Error getting top movers: {str(e)}")
-            return None
+
+    def get_top_gainers(self, limit=5):
+        """Lấy danh sách cổ phiếu tăng giá mạnh nhất"""
+        cache_key = f'top_gainers_{limit}'
+        data = cache.get(cache_key)
+        
+        if not data:
+            # Implement logic to get top gainers
+            # This is a simplified example
+            data = self._get_stock_changes()
+            data = sorted(data, key=lambda x: x['change_percent'], reverse=True)[:limit]
+            
+            cache.set(cache_key, data, 300)
+            
+        return data
+
+    def get_top_losers(self, limit=5):
+        """Lấy danh sách cổ phiếu giảm giá mạnh nhất"""
+        cache_key = f'top_losers_{limit}'
+        data = cache.get(cache_key)
+        
+        if not data:
+            # Implement logic to get top losers
+            data = self._get_stock_changes()
+            data = sorted(data, key=lambda x: x['change_percent'])[:limit]
+            
+            cache.set(cache_key, data, 300)
+            
+        return data
+
+    def _get_stock_changes(self):
+        """Helper method to get stock price changes"""
+        # Danh sách mã cổ phiếu VN30 (ví dụ)
+        vn30_symbols = ['VNM.VN', 'VIC.VN', 'VHM.VN', 'HPG.VN', 'MSN.VN']
+        results = []
+        
+        for symbol in vn30_symbols:
+            try:
+                stock = yf.Ticker(symbol)
+                hist = stock.history(period="1d")  # Thay đổi từ "2d" thành "1d"
+                if not hist.empty:
+                    current_price = hist['Close'].iloc[-1]
+                    open_price = hist['Open'].iloc[-1]
+                    change_percent = ((current_price - open_price) / open_price) * 100
+                    
+                    results.append({
+                        'symbol': symbol.replace('.VN', ''),
+                        'price': round(current_price, 2),
+                        'change_percent': round(change_percent, 2)
+                    })
+                else:
+                    logger.warning(f"No data found for {symbol}")
+            except Exception as e:
+                logger.error(f"Error getting data for {symbol}: {str(e)}")
+                
+        return results
 
     def get_company_overview(self, symbol):
         """Lấy thông tin tổng quan về công ty"""
@@ -502,7 +539,45 @@ class StockService:
             logger.error(f"Error getting industry overview: {str(e)}")
             return None
 
+    def get_market_news(self, limit=3):
+        # Đây là một phiên bản đơn giản với dữ liệu mẫu
+        news = [
+            {
+                'title': 'Thị trường chứng khoán tăng mạnh',
+                'summary': 'VN-Index tăng 15 điểm trong phiên giao dịch hôm nay.',
+                'source': 'VnExpress',
+                'date': timezone.now(),
+                'url': 'https://vnexpress.net/kinh-doanh/chung-khoan',
+                'image_url': 'https://i1-kinhdoanh.vnecdn.net/2023/09/20/VNI-7293-1695198154.png?w=380&h=228&q=100&dpr=1&fit=crop&s=Swd6JjpStebEzT6WARjLOA'
+            },
+            {
+                'title': 'Cổ phiếu ngân hàng dẫn dắt thị trường',
+                'summary': 'Nhóm cổ phiếu ngân hàng tăng mạnh, kéo theo sự tăng điểm của thị trường.',
+                'source': 'CafeF',
+                'date': timezone.now() - timezone.timedelta(hours=2),
+                'url': 'https://cafef.vn/thi-truong-chung-khoan.chn',
+                'image_url': 'https://cafefcdn.com/thumb_w/640/203337114487263232/2023/10/13/photo1697185693801-16971856940611735318003.jpg'
+            },
+            {
+                'title': 'Nhà đầu tư nước ngoài mua ròng trở lại',
+                'summary': 'Khối ngoại mua ròng hơn 500 tỷ đồng trong phiên giao dịch hôm nay.',
+                'source': 'NDH',
+                'date': timezone.now() - timezone.timedelta(hours=4),
+                'url': 'https://ndh.vn/chung-khoan',
+                'image_url': 'https://ndh.vn/wp-content/uploads/2021/03/chung-khoan-viet-nam.jpg'
+            }
+        ]
+        return news[:limit]
+
     # Bạn có thể thêm các phương thức khác nếu cần
+
+
+
+
+
+
+
+
 
 
 

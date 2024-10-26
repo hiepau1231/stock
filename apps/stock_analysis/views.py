@@ -26,6 +26,7 @@ import logging
 import statistics  # Thêm dòng này vào đầu file
 from django.db.models import Avg, Sum, Count, F, Q
 from .services.portfolio_optimization_service import PortfolioOptimizationService
+from .services.portfolio_service import PortfolioService
 
 logger = logging.getLogger(__name__)
 
@@ -87,13 +88,51 @@ class StockListView(ListView):
 
 @login_required
 def dashboard(request):
-    stock_service = StockService()
-    top_movers = stock_service.get_top_movers(limit=5)
-    
-    context = {
-        'top_movers': top_movers if top_movers else {'top_gainers': [], 'top_losers': []}
-    }
-    return render(request, 'stock_analysis/dashboard.html', context)
+    try:
+        stock_service = StockService()
+        portfolio_service = PortfolioService()
+        recommendation_service = RecommendationService()
+
+        # Lấy dữ liệu thị trường
+        market_overview = stock_service.get_market_overview()
+        
+        # Lấy top gainers/losers
+        top_gainers = stock_service.get_top_gainers(limit=5)
+        top_losers = stock_service.get_top_losers(limit=5)
+        
+        # Lấy danh mục đầu tư của user
+        if request.user.is_authenticated:
+            portfolios = portfolio_service.get_user_portfolios(request.user)
+            portfolio_performance = portfolio_service.get_portfolio_performance(request.user)
+        else:
+            portfolios = []
+            portfolio_performance = None
+        
+        # Lấy các khuyến nghị
+        recommendations = recommendation_service.get_latest_recommendations(limit=5)
+
+        context = {
+            'market_overview': market_overview,  # Đổi từ market_data thành market_overview
+            'top_gainers': top_gainers,
+            'top_losers': top_losers,
+            'portfolios': portfolios,
+            'portfolio_performance': portfolio_performance,
+            'recommendations': recommendations,
+            'segment': 'dashboard'
+        }
+        
+        return render(request, 'stock_analysis/dashboard.html', context)
+    except Exception as e:
+        logger.error(f"Error in dashboard view: {str(e)}")
+        return render(request, 'stock_analysis/dashboard.html', {
+            'market_overview': None,
+            'top_gainers': [],
+            'top_losers': [],
+            'portfolios': [],
+            'portfolio_performance': None,
+            'recommendations': [],
+            'segment': 'dashboard'
+        })
 
 @login_required
 def stock_list(request):
@@ -940,3 +979,4 @@ class PortfolioTransactionView(LoginRequiredMixin, DetailView):
             portfolio=portfolio
         ).order_by('-date')
         return context
+
