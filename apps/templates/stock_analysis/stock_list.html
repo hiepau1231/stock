@@ -1,144 +1,170 @@
 {% extends "layouts/base.html" %}
-{% load humanize %}  {# Thêm dòng này #}
+{% load stock_filters %}
 
-
-
-{% block title %} Stock List {% endblock %}
-
-
+{% block title %} Danh sách cổ phiếu {% endblock %}
 
 {% block content %}
-
-
-
-<div class="container-fluid py-4">
-
-    <div class="row">
-
-        <div class="col-12">
-
-            <div class="card mb-4">
-
-                <div class="card-header pb-0">
-
-                    <h6>Stock List</h6>
-
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <h6 class="h2 text-white d-inline-block mb-0">Danh sách cổ phiếu</h6>
+                    </div>
+                    <div class="col-lg-6 col-5 text-right">
+                        {% if last_update %}
+                        <span class="text-white">Cập nhật lần cuối: {{ last_update|date:"H:i d/m/Y" }}</span>
+                        {% endif %}
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="card-body px-0 pt-0 pb-2">
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <!-- Card header -->
+                    <div class="card-header border-0">
+                        <div class="row">
+                            <div class="col-6">
+                                <h3 class="mb-0">Tất cả cổ phiếu</h3>
+                            </div>
+                            <div class="col-6 text-right">
+                                <div class="input-group">
+                                    <input type="text" id="stockSearch" class="form-control" placeholder="Tìm kiếm mã cổ phiếu...">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="ni ni-zoom-split-in"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="table-responsive p-0">
-
-                        <table class="table align-items-center mb-0">
-
-                            <thead>
-
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush" id="stockTable">
+                            <thead class="thead-light">
                                 <tr>
-
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Symbol</th>
-
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
-
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Exchange</th>
-
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Price</th>
-
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Change</th>
-
-                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">% Change</th>
-
-                                    <th class="text-secondary opacity-7"></th>
-
+                                    <th scope="col">Mã CK</th>
+                                    <th scope="col">Tên công ty</th>
+                                    <th scope="col">Ngành</th>
+                                    <th scope="col">Giá</th>
+                                    <th scope="col">Thay đổi</th>
+                                    <th scope="col">Khối lượng</th>
+                                    <th scope="col">Vốn hóa</th>
+                                    <th scope="col">Thao tác</th>
                                 </tr>
-
                             </thead>
-
                             <tbody>
-
                                 {% for stock in stocks %}
-
                                 <tr>
-
-                                    <td class="text-center">
-                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}">
+                                    <td>
+                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}" class="font-weight-bold">
                                             {{ stock.symbol }}
                                         </a>
                                     </td>
-
-                                    <td class="text-center">{{ stock.name }}</td>
-
-                                    <td class="text-center">{{ stock.exchange }}</td>
-
-                                    <td class="text-center">{{ stock.current_price|floatformat:2 }}</td>
-
-                                    <td class="text-center {% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% endif %}">
-                                        {{ stock.change|floatformat:2 }}
+                                    <td>{{ stock.name }}</td>
+                                    <td>{{ stock.industry.name }}</td>
+                                    <td>{{ stock.current_price|format_price }}</td>
+                                    <td class="{% if stock.percent_change > 0 %}text-success{% elif stock.percent_change < 0 %}text-danger{% endif %}">
+                                        {{ stock.percent_change|format_percent }}
                                     </td>
-
-                                    <td class="text-center {% if stock.percent_change > 0 %}text-success{% elif stock.percent_change < 0 %}text-danger{% endif %}">
-                                        {{ stock.percent_change|floatformat:2 }}%
+                                    <td>{{ stock.volume|format_volume }}</td>
+                                    <td>{{ stock.market_cap|format_volume }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                                                <a class="dropdown-item" href="{% url 'stock_analysis:stock_detail' stock.symbol %}">
+                                                    <i class="ni ni-chart-bar-32"></i> Chi tiết
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'stock_analysis:add_to_watchlist' stock.symbol %}">
+                                                    <i class="ni ni-favourite-28"></i> Thêm vào theo dõi
+                                                </a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#addAlertModal" data-symbol="{{ stock.symbol }}">
+                                                    <i class="ni ni-bell-55"></i> Tạo cảnh báo giá
+                                                </a>
+                                            </div>
+                                        </div>
                                     </td>
-
-                                    <td class="text-center">
-                                        <a href="{% url 'stock_analysis:stock_detail' stock.symbol %}" class="btn btn-link text-secondary mb-0">
-                                            <i class="fa fa-ellipsis-v text-xs"></i>
-                                        </a>
-                                    </td>
-
                                 </tr>
-
                                 {% endfor %}
-
                             </tbody>
-
                         </table>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
 
+<!-- Modal thêm cảnh báo giá -->
+<div class="modal fade" id="addAlertModal" tabindex="-1" role="dialog" aria-labelledby="addAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="" id="alertForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAlertModalLabel">Tạo cảnh báo giá</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Loại cảnh báo</label>
+                        <select name="alert_type" class="form-control">
+                            <option value="above">Giá vượt trên</option>
+                            <option value="below">Giá xuống dưới</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mức giá</label>
+                        <input type="number" name="price_threshold" class="form-control" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Tạo cảnh báo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-
-{% endblock content %}
-
-
-
-{% block javascripts %}
-
+{% block extra_js %}
 <script>
+// Tìm kiếm cổ phiếu
+document.getElementById('stockSearch').addEventListener('keyup', function() {
+    var input = this.value.toLowerCase();
+    var table = document.getElementById('stockTable');
+    var rows = table.getElementsByTagName('tr');
 
-    $(document).ready(function() {
-        // Thêm DataTables nếu cần
-        $('.table').DataTable({
-            "pageLength": 25,
-            "order": [[ 0, "asc" ]],
-            "language": {
-                "search": "Tìm kiếm:",
-                "lengthMenu": "Hiển thị _MENU_ dòng",
-                "info": "Hiển thị _START_ đến _END_ trong tổng số _TOTAL_ dòng",
-                "infoEmpty": "Hiển thị 0 đến 0 trong tổng số 0 dòng",
-                "infoFiltered": "(lọc từ _MAX_ dòng)",
-                "paginate": {
-                    "first": "Đầu",
-                    "last": "Cuối",
-                    "next": "Sau",
-                    "previous": "Trước"
-                }
-            }
-        });
-    });
+    for (var i = 1; i < rows.length; i++) {
+        var symbol = rows[i].getElementsByTagName('td')[0].textContent.toLowerCase();
+        var name = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase();
+        if (symbol.includes(input) || name.includes(input)) {
+            rows[i].style.display = '';
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+});
 
+// Xử lý modal cảnh báo giá
+$('#addAlertModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var symbol = button.data('symbol');
+    var modal = $(this);
+    modal.find('form').attr('action', '/stock/alerts/add/' + symbol + '/');
+});
 </script>
-
-{% endblock javascripts %}
-
-
-
+{% endblock %}

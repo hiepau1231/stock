@@ -20,44 +20,55 @@
 - ✅ Thêm tính năng xuất báo cáo PDF/Excel cho danh mục
 - ✅ Thêm biểu đồ phân bổ danh mục
 - ✅ Thêm thống kê hiệu suất danh mục theo thời gian
+- ✅ Thêm so sánh với benchmark (VN-Index)
+- ✅ Thêm phân tích rủi ro danh mục (Volatility, Sharpe Ratio, Beta, VaR)
+- ✅ Trang giới thiệu và hướng dẫn
+- ✅ Trang Cổ phiếu được khuyến nghị:
+  - ✅ Hiển thị 5 mã cổ phiếu được khuyến nghị
+  - ✅ Cập nhật chỉ số hiện tại mỗi tuần
+  - ✅ Thêm lý do khuyến nghị
+  - ✅ Thêm cron job cập nhật tuần qua Celery
 
-## Cần làm tiếp
-1. Hoàn thiện tính năng quản lý danh mục:
-   - Thêm so sánh với benchmark (VN-Index)
-   - Thêm phân tích rủi ro danh mục
-   - Thêm gợi ý cân bằng danh mục
-   - Thêm thông báo email khi có biến động lớn
+## Cần làm tiếp theo thứ tự ưu tiên
 
-2. Thêm tính năng phân tích:
-   - Phân tích cơ bản (P/E, EPS, etc.)
-   - Phân tích kỹ thuật nâng cao (Support/Resistance, Trend lines)
-   - So sánh cổ phiếu
-   - Phân tích ngành
-   - Lọc cổ phiếu theo tiêu chí
+1. Phân tích cổ phiếu theo ngành:
+   - Tạo thanh chọn ngành (11 ngành)
+   - Hiển thị danh sách cổ phiếu theo ngành và sàn
+   - Thêm biểu đồ phân tích dòng tiền
+   - Hiển thị 3 mã tiềm năng của ngành
+   (Đã có model Industry và StockIndustry, cần thêm data và logic)
 
-3. Cải thiện giao diện người dùng:
-   - Thêm dark mode
-   - Cải thiện UX cho các tương tác người dùng
-   - Thêm animations và transitions
-   - Tối ưu hiển thị trên mobile
+2. Phân tích và dự đoán VNINDEX:
+   - Thêm thông tin và chỉ số hiện tại
+   - Cập nhật dự đoán 1 tuần
+   - Tự động cập nhật hàng tuần
+   (Cần implement thuật toán dự đoán)
 
-4. Tích hợp Machine Learning:
-   - Dự đoán giá cổ phiếu
-   - Phân tích sentiment từ tin tức
-   - Gợi ý cổ phiếu dựa trên profile người dùng
-   - Cảnh báo bất thường
+3. Phân tích và dự đoán từng mã:
+   - Thêm form chọn mã và thời gian dự đoán
+   - Hiển thị thông tin chi tiết (P/E, EPS, etc.)
+   - Thêm các biểu đồ phân tích
+   - Thêm khuyến nghị mua/bán
+   (Phần phức tạp nhất, cần nhiều thuật toán)
 
-5. Tối ưu hóa hiệu suất:
-   - Thêm Redis cache
-   - Tối ưu background tasks với Celery
-   - Horizontal scaling cho database
-   - CDN cho static files
+## Chi tiết triển khai
+
+### 1. Phân tích theo ngành (Ưu tiên 1):
+- Tạo data migration cho 11 ngành
+- Implement IndustryAnalysisService
+- Tạo template industry_analysis.html
+- Thêm biểu đồ dòng tiền ngành
+
+### 2. Dự đoán VNINDEX (Ưu tiên 2):
+- Implement PredictionService
+- Tạo template market_prediction.html
+- Thêm cron job cập nhật tuần
 
 ## Ưu tiên
-1. Hoàn thiện tính năng quản lý danh mục (so sánh với benchmark, phân tích rủi ro)
-2. Thêm phân tích cơ bản và kỹ thuật nâng cao
-3. Cải thiện UX/UI với dark mode và animations
-4. Tích hợp các mô hình ML
+1. Thêm gợi ý cân bằng danh mục
+2. Thêm thông báo email khi có biến động lớn
+3. Thêm phân tích cơ bản và kỹ thuật nâng cao
+4. Cải thiện UX/UI với dark mode và animations
 
 ## Lưu ý
 - Theo dõi giới hạn request của yfinance API

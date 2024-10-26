@@ -104,7 +104,7 @@ USE_TZ = True
 # Static files configuration
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'apps/static'),  # Cập nhật đường dẫn này
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -187,5 +187,9 @@ CELERY_BEAT_SCHEDULE = {
     'update_historical_data': {
         'task': 'apps.stock_analysis.tasks.update_historical_data',
         'schedule': 3600.0,  # Chạy mỗi giờ
+    },
+    'update_recommendations': {
+        'task': 'apps.stock_analysis.tasks.update_recommendations',
+        'schedule': 604800.0,  # Chạy mỗi tuần
     },
 }

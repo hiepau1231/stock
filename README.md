@@ -1,10 +1,8 @@
 # Stock Analysis Platform
 
-Nền tảng phân tích chứng khoán sử dụng Django
+Nền tảng phân tích chứng khoán sử dụng Django và yfinance API.
 
-## Tính năng
-
-### Đã hoàn thành
+## TÍNH NĂNG ĐÃ HOÀN THÀNH
 - Hiển thị dữ liệu thị trường realtime
 - Biểu đồ Candlestick và các chỉ báo kỹ thuật (RSI, MACD, Bollinger Bands)
 - Quản lý danh mục đầu tư cơ bản
@@ -13,7 +11,7 @@ Nền tảng phân tích chứng khoán sử dụng Django
 - Tối ưu hiệu suất với caching
 - Cập nhật dữ liệu tự động
 
-## Cài đặt
+## CÀI ĐẶT
 
 1. Clone repository và cài đặt môi trường:
 ```
@@ -30,19 +28,23 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-3. Chạy server:
+3. Thu thập static files:
+```
+python manage.py collectstatic
+```
+
+4. Chạy server:
 ```
 python manage.py runserver
 ```
 
-## Cập nhật dữ liệu tự động
+## CẬP NHẬT DỮ LIỆU TỰ ĐỘNG
 
 ### Phương pháp 1: Sử dụng Management Command
 1. Chạy trực tiếp command:
 ```bash
 python manage.py auto_update_data
 ```
-Command này sẽ tự động cập nhật dữ liệu mỗi giờ và tự động khởi động lại nếu có lỗi.
 
 ### Phương pháp 2: Sử dụng Windows Task Scheduler
 1. Tạo file batch (update_stock_data.bat):
@@ -53,13 +55,9 @@ call venv\Scripts\activate
 python manage.py auto_update_data
 ```
 
-2. Cấu hình Task Scheduler:
-- Mở Windows Task Scheduler
-- Tạo Task mới
-- Trigger: Daily hoặc At startup
-- Action: Start program -> Chọn file update_stock_data.bat
+2. Cấu hình Task Scheduler để chạy file batch định kỳ
 
-### Phương pháp 3: Sử dụng Celery (Nâng cao)
+### Phương pháp 3: Sử dụng Celery
 1. Cài đặt Redis và Celery:
 ```bash
 pip install celery redis
@@ -75,16 +73,14 @@ celery -A core worker -l info
 celery -A core beat -l info
 ```
 
-## Cấu trúc thư mục
+## CẤU TRÚC THƯ MỤC
 
 ```
-stock-analysis/
-├── apps/
-│   └── stock_analysis/     # Ứng dụng chính
+stock/
+├── apps/                   # Chứa các ứng dụng Django
 ├── core/                   # Cấu hình Django
-├── templates/             # Giao diện
-└── cline_docs/           # Tài liệu
-```
+├── cline_docs/            # Tài liệu dự án
+└── staticfiles/           # Static files đã được collect
 
 ## API
 
@@ -92,28 +88,28 @@ stock-analysis/
 - /api/stock/<symbol>/indicators/ - Chỉ báo kỹ thuật
 - /api/stock/<symbol>/historical/ - Dữ liệu lịch sử
 
-## Công nghệ sử dụng
+## CÔNG NGHỆ SỬ DỤNG
 
 - Django 5.0.2
-- PostgreSQL
+- SQLite
 - yfinance API
 - Plotly
 - Pandas
 - Celery (tùy chọn)
 - Redis (tùy chọn)
 
-## Lưu ý
+## LƯU Ý
 
 - Dữ liệu được cập nhật tự động mỗi giờ
 - Có thể điều chỉnh thời gian cập nhật trong file auto_update_data.py
 - Nên sử dụng caching để giảm tải cho server
 - Theo dõi log để phát hiện lỗi khi cập nhật dữ liệu
 
-## Liên hệ
+## LIÊN HỆ
 
 Email: example@email.com
 GitHub: github.com/username
 
-## License
+## LICENSE
 
 MIT License

@@ -1,0 +1,166 @@
+{% extends "layouts/base.html" %}
+{% load humanize %}
+{% load stock_filters %}  {# Quan trọng: Load custom template filters #}
+
+{% block title %} Check Data {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>Database Statistics</h2>
+    
+    <!-- Thống kê tổng quan -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Stocks</h5>
+                    <h2 class="card-text">{{ stock_count }}</h2>
+                    <p class="text-muted">Total stocks in database</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Price Records</h5>
+                    <h2 class="card-text">{{ price_count }}</h2>
+                    <p class="text-muted">Total historical prices</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Industries</h5>
+                    <h2 class="card-text">{{ industry_count }}</h2>
+                    <p class="text-muted">Total industries</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Last Update</h5>
+                    <p class="card-text">{{ last_update|date:"Y-m-d H:i" }}</p>
+                    <p class="text-muted">Latest data update time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng cổ phiếu gần đây -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Stock Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Industry</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                    <th>Market Cap</th>
+                                    <th>Last Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in recent_stocks %}
+                                <tr>
+                                    <td><strong>{{ stock.symbol }}</strong></td>
+                                    <td>{{ stock.name }}</td>
+                                    <td>{{ stock.industry.name }}</td>
+                                    <td>{{ stock.current_price|format_price }}</td>
+                                    <td class="{% if stock.percent_change > 0 %}text-success{% elif stock.percent_change < 0 %}text-danger{% endif %}">
+                                        {{ stock.percent_change|format_percent }}
+                                    </td>
+                                    <td>{{ stock.volume|format_volume }}</td>
+                                    <td>{{ stock.market_cap|format_volume }}</td>
+                                    <td>{{ stock.updated_at|date:"Y-m-d H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng giá gần đây -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Price History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>Date</th>
+                                    <th>Open</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                    <th>Close</th>
+                                    <th>Volume</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for price in recent_prices %}
+                                <tr>
+                                    <td><strong>{{ price.stock.symbol }}</strong></td>
+                                    <td>{{ price.date }}</td>
+                                    <td>{{ price.open_price|format_price }}</td>
+                                    <td>{{ price.high_price|format_price }}</td>
+                                    <td>{{ price.low_price|format_price }}</td>
+                                    <td>{{ price.close_price|format_price }}</td>
+                                    <td>{{ price.volume|format_volume }}</td>
+                                    <td class="{% if price.close_price > price.open_price %}text-success{% elif price.close_price < price.open_price %}text-danger{% endif %}">
+                                        {{ price.close_price|calculate_change:price.open_price }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút làm mới dữ liệu -->
+    <div class="row mt-4 mb-4">
+        <div class="col-md-12 text-center">
+            <form method="post" action="{% url 'stock_analysis:refresh_data' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format numbers with commas
+    document.addEventListener('DOMContentLoaded', function() {
+        const numbers = document.querySelectorAll('.format-number');
+        numbers.forEach(function(element) {
+            const num = parseFloat(element.textContent);
+            element.textContent = num.toLocaleString();
+        });
+    });
+</script>
+{% endblock %}

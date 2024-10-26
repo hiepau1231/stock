@@ -32,6 +32,10 @@
                class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Xuất Excel
             </a>
+            <a href="{% url 'stock_analysis:portfolio_optimization' portfolio.id %}" 
+               class="btn btn-info">
+                <i class="fas fa-balance-scale"></i> Gợi ý cân bằng
+            </a>
         </div>
     </div>
 
@@ -76,9 +80,31 @@
         </table>
     </div>
 
-    <div class="performance-chart">
-        <h2>Hiệu suất danh mục</h2>
-        <div id="performance-chart"></div>
+    <!-- Thêm section hiệu suất -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">So sánh hiệu suất với {{ benchmark_name }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Hiệu suất danh mục</h4>
+                    <p>{{ performance_data.portfolio_return|percentage }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Hiệu suất {{ benchmark_name }}</h4>
+                    <p>{{ performance_data.benchmark_return|percentage }}</p>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h4>Alpha</h4>
+                    <p>{{ performance_data.alpha|percentage }}</p>
+                </div>
+            </div>
+            <!-- Thêm biểu đồ so sánh ở đây -->
+            <div id="performance-chart"></div>
+        </div>
     </div>
 
     <!-- Thêm biểu đồ phân tích danh mục -->
@@ -92,6 +118,45 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Thêm section phân tích rủi ro -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Phân tích rủi ro danh mục</h3>
+        </div>
+        <div class="card-body">
+            {% if risk_data %}
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Độ biến động (Volatility)</h4>
+                    <p>{{ risk_data.volatility|floatformat:2 }}%</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Hệ số Sharpe</h4>
+                    <p>{{ risk_data.sharpe_ratio|floatformat:2 }}</p>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h4>Beta (với {{ benchmark_name }})</h4>
+                    <p>{{ risk_data.beta|floatformat:2 }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Value at Risk (95%)</h4>
+                    <p>{{ risk_data.var_95|percentage }}</p>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h4>Maximum Drawdown</h4>
+                    <p>{{ risk_data.max_drawdown|percentage }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p>Không đủ dữ liệu để tính toán chỉ số rủi ro</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -116,5 +181,11 @@ const layout = {
 };
 
 Plotly.newPlot('performance-chart', [trace], layout);
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Thêm code vẽ biểu đồ so sánh
 </script>
 {% endblock %}

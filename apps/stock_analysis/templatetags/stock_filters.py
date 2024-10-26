@@ -5,17 +5,12 @@ register = template.Library()
 
 @register.filter(name='format_price')
 def format_price(value):
-    """
-    Format a number as VND price
-    Example: 1234567 -> 1.234.567 VND
-    """
+    """Format a number as VND price"""
     if value is None:
         return "N/A"
-    
     try:
         value = float(value)
         formatted = "{:,.0f}".format(value)
-        # Thay dấu phẩy bằng dấu chấm
         formatted = formatted.replace(',', '.')
         return f"{formatted} VND"
     except (ValueError, TypeError):
@@ -23,13 +18,9 @@ def format_price(value):
 
 @register.filter(name='format_change')
 def format_change(value):
-    """
-    Format price change with sign
-    Example: 1234.56 -> +1.234,56 VND
-    """
+    """Format price change with sign"""
     if value is None:
         return "N/A"
-    
     try:
         value = float(value)
         sign = "+" if value > 0 else ""
@@ -41,13 +32,9 @@ def format_change(value):
 
 @register.filter(name='format_percent')
 def format_percent(value):
-    """
-    Format percentage with sign
-    Example: 12.34 -> +12,34%
-    """
+    """Format percentage with sign"""
     if value is None:
         return "N/A"
-    
     try:
         value = float(value)
         sign = "+" if value > 0 else ""
@@ -57,15 +44,32 @@ def format_percent(value):
 
 @register.filter(name='format_volume')
 def format_volume(value):
-    """
-    Format volume with dots as thousand separators
-    Example: 1234567 -> 1.234.567
-    """
+    """Format volume with dots as thousand separators"""
     if value is None:
         return "N/A"
-    
     try:
         value = int(value)
         return "{:,.0f}".format(value).replace(',', '.')
     except (ValueError, TypeError):
         return value
+
+@register.filter(name='subtract')
+def subtract(value, arg):
+    """Subtract two numbers"""
+    try:
+        if isinstance(value, str):
+            value = float(value.replace(',', '').replace('.', '').replace('VND', '').strip())
+        if isinstance(arg, str):
+            arg = float(arg.replace(',', '').replace('.', '').replace('VND', '').strip())
+        return value - arg
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter(name='calculate_change')
+def calculate_change(close_price, open_price):
+    """Calculate price change and format it"""
+    try:
+        change = float(close_price) - float(open_price)
+        return format_change(change)
+    except (ValueError, TypeError):
+        return "N/A"

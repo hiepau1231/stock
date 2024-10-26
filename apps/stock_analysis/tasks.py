@@ -36,3 +36,15 @@ def update_historical_data():
 
 
 
+
+@shared_task
+def update_recommendations():
+    """Cập nhật danh sách khuyến nghị hàng tuần"""
+    call_command('update_recommendations')
+
+
+
+
+
+
+

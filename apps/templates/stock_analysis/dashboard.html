@@ -1,42 +1,137 @@
 {% extends "layouts/base.html" %}
 {% load static %}
 {% load humanize %}
+{% load stock_filters %}
 
 {% block title %} Dashboard {% endblock %}
 
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-    <div class="header bg-gradient-primary pb-8 pt-5 pt-md-8">
-        <div class="container-fluid">
-            <div class="header-body">
-                <!-- Card stats -->
-                <div class="row">
-                    {% for index in market_overview %}
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="card card-stats mb-4 mb-xl-0">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">{{ index.symbol }}</h5>
-                                        <span class="h2 font-weight-bold mb-0">{{ index.price }}</span>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon icon-shape bg-{% if index.change > 0 %}success{% else %}danger{% endif %} text-white rounded-circle shadow">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </div>
-                                    </div>
+    <div class="container-fluid mt-4">
+        <!-- Market Overview -->
+        <div class="row">
+            {% for index in market_overview.indices %}
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0">{{ index.symbol }}</h5>
+                                <span class="h2 font-weight-bold mb-0">{{ index.price|format_price }}</span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-gradient-primary text-white rounded-circle shadow">
+                                    <i class="ni ni-chart-bar-32"></i>
                                 </div>
-                                <p class="mt-3 mb-0 text-muted text-sm">
-                                    <span class="text-{% if index.change > 0 %}success{% else %}danger{% endif %} mr-2">
-                                        <i class="fa fa-arrow-{% if index.change > 0 %}up{% else %}down{% endif %}"></i> {{ index.change_percent|floatformat:2 }}%
-                                    </span>
-                                    <span class="text-nowrap">Since last close</span>
-                                </p>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0 text-sm">
+                            <span class="text-{% if index.change > 0 %}success{% elif index.change < 0 %}danger{% else %}warning{% endif %} mr-2">
+                                {{ index.change }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Market Statistics -->
+        <div class="row mt-4">
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h3 class="mb-0">Top Gainers/Losers</h3>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
+                    <div class="table-responsive">
+                        <!-- Top Gainers -->
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Symbol</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Change</th>
+                                    <th scope="col">Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in top_gainers %}
+                                <tr>
+                                    <td>{{ stock.symbol }}</td>
+                                    <td>{{ stock.price|format_price }}</td>
+                                    <td class="text-success">
+                                        {{ stock.change_percent|format_percent }}
+                                    </td>
+                                    <td>{{ stock.volume|format_volume }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h3 class="mb-0">Market Statistics</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            <!-- Market stats here -->
+                            <div class="d-flex justify-content-between">
+                                <div>Advancing: <span class="text-success">{{ market_overview.stats.up_stocks }}</span></div>
+                                <div>Declining: <span class="text-danger">{{ market_overview.stats.down_stocks }}</span></div>
+                                <div>Unchanged: <span class="text-warning">{{ market_overview.stats.unchanged_stocks }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Industry Overview -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header border-0">
+                        <h3 class="mb-0">Industry Overview</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Industry</th>
+                                    <th>Market Cap</th>
+                                    <th>Stocks</th>
+                                    <th>Top Companies</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for industry in industry_overview %}
+                                <tr>
+                                    <td>{{ industry.name }}</td>
+                                    <td>{{ industry.total_market_cap|format_price }}</td>
+                                    <td>{{ industry.stock_count }}</td>
+                                    <td>
+                                        {% for stock in industry.top_stocks %}
+                                        <span class="badge badge-primary">{{ stock.symbol }}</span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

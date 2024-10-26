@@ -24,4 +24,11 @@ urlpatterns = [
     path('alerts/', views.PriceAlertListView.as_view(), name='price_alert_list'),
     path('alerts/add/<str:symbol>/', views.add_price_alert, name='add_price_alert'),
     path('alerts/remove/<int:alert_id>/', views.remove_price_alert, name='remove_price_alert'),
+    path('recommendations/', views.RecommendationsView.as_view(), name='recommendations'),
+    path('portfolio/<int:pk>/optimize/', 
+     views.PortfolioOptimizationView.as_view(), 
+     name='portfolio_optimization'),
+    path('api/industry/<int:industry_id>/', views.get_industry_data, name='get_industry_data'),
+    path('check-data/', views.check_data, name='check_data'),
+    path('refresh-data/', views.refresh_data, name='refresh_data'),
 ]

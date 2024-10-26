@@ -1,0 +1,107 @@
+{% extends "layouts/base.html" %}
+{% load stock_filters %}
+
+{% block title %} Khuyến nghị đầu tư {% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+        <div class="container-fluid">
+            <div class="header-body">
+                <div class="row align-items-center py-4">
+                    <div class="col-lg-6 col-7">
+                        <h6 class="h2 text-white d-inline-block mb-0">Khuyến nghị đầu tư</h6>
+                    </div>
+                    <div class="col-lg-6 col-5 text-right">
+                        <span class="text-white">Cập nhật: {{ last_update|date:"H:i d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <!-- Card header -->
+                    <div class="card-header border-0">
+                        <h3 class="mb-0">Top cổ phiếu khuyến nghị</h3>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Mã CK</th>
+                                    <th>Tên công ty</th>
+                                    <th>Ngành</th>
+                                    <th>Giá hiện tại</th>
+                                    <th>Thay đổi</th>
+                                    <th>Điểm đánh giá</th>
+                                    <th>Lý do khuyến nghị</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in recommendations %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'stock_analysis:stock_detail' rec.symbol %}" class="font-weight-bold">
+                                            {{ rec.symbol }}
+                                        </a>
+                                    </td>
+                                    <td>{{ rec.name }}</td>
+                                    <td>{{ rec.industry }}</td>
+                                    <td>{{ rec.current_price|format_price }}</td>
+                                    <td class="{% if rec.change_percent > 0 %}text-success{% elif rec.change_percent < 0 %}text-danger{% endif %}">
+                                        {{ rec.change_percent|format_percent }}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="mr-2">{{ rec.score }}</span>
+                                            <div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-gradient-success" role="progressbar" 
+                                                         style="width: {{ rec.score }}%" 
+                                                         aria-valuenow="{{ rec.score }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <ul class="mb-0 pl-3">
+                                            {% for reason in rec.reasons %}
+                                            <li>{{ reason }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Không có khuyến nghị nào</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Card footer -->
+                    <div class="card-footer py-4">
+                        <div class="alert alert-info mb-0">
+                            <i class="ni ni-notification-70"></i>
+                            <strong>Lưu ý:</strong> Các khuyến nghị được dựa trên phân tích kỹ thuật và có thể thay đổi theo thời gian. 
+                            Nhà đầu tư nên tham khảo thêm các nguồn thông tin khác trước khi đưa ra quyết định đầu tư.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

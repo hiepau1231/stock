@@ -5,14 +5,21 @@ Copyright (c) 2019 - present AppSeed.us
 
 # Create your views here.
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, views as auth_views
+from django.contrib.auth import authenticate, login, views as auth_views, logout
 from .forms import LoginForm, SignUpForm
 from django.urls import reverse
+from django.views.decorators.http import require_http_methods
 
 
 class CustomLogoutView(auth_views.LogoutView):
     def get(self, request, *args, **kwargs):
         return self.post(request, *args, **kwargs)
+
+
+@require_http_methods(["POST"])
+def logout_view(request):
+    logout(request)
+    return redirect('login')
 
 
 def login_view(request):

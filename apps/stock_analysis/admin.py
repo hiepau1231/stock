@@ -9,7 +9,9 @@ from .models import (
     UserStockHolding,
     Portfolio,
     PortfolioItem,
-    HistoricalData
+    HistoricalData,
+    Industry,
+    PriceAlert
 )
 
 @admin.register(MarketIndex)
@@ -20,7 +22,8 @@ class MarketIndexAdmin(admin.ModelAdmin):
 
 @admin.register(Stock)
 class StockAdmin(admin.ModelAdmin):
-    list_display = ('symbol', 'name')
+    list_display = ('symbol', 'name', 'industry', 'current_price', 'change', 'percent_change')
+    list_filter = ('industry',)
     search_fields = ('symbol', 'name')
 
 @admin.register(StockData)
@@ -37,9 +40,10 @@ class WatchListAdmin(admin.ModelAdmin):
 
 @admin.register(StockPrice)
 class StockPriceAdmin(admin.ModelAdmin):
-    list_display = ('stock', 'date', 'open', 'high', 'low', 'close', 'volume')
-    list_filter = ('stock', 'date')
-    search_fields = ('stock__symbol', 'stock__name')
+    list_display = ('stock', 'date', 'open_price', 'close_price', 'volume')
+    list_filter = ('date', 'stock')
+    search_fields = ('stock__symbol',)
+    date_hierarchy = 'date'
 
 @admin.register(UserPortfolio)
 class UserPortfolioAdmin(admin.ModelAdmin):
@@ -53,18 +57,29 @@ class UserStockHoldingAdmin(admin.ModelAdmin):
 
 @admin.register(Portfolio)
 class PortfolioAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'created_at')
+    list_display = ('name', 'user', 'initial_value', 'current_value', 'created_at')
+    list_filter = ('user',)
     search_fields = ('name', 'user__username')
-    list_filter = ('created_at',)
 
 @admin.register(PortfolioItem)
 class PortfolioItemAdmin(admin.ModelAdmin):
-    list_display = ('portfolio', 'stock', 'quantity', 'purchase_price', 'purchase_date')
+    list_display = ('portfolio', 'stock', 'quantity', 'purchase_price', 'current_price', 'profit_loss')
+    list_filter = ('portfolio', 'stock')
     search_fields = ('portfolio__name', 'stock__symbol')
-    list_filter = ('purchase_date',)
 
 @admin.register(HistoricalData)
 class HistoricalDataAdmin(admin.ModelAdmin):
     list_display = ('stock', 'date', 'open_price', 'close_price', 'volume')
     search_fields = ('stock__symbol',)
     list_filter = ('date',)
+
+@admin.register(Industry)
+class IndustryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_at', 'updated_at')
+    search_fields = ('name',)
+
+@admin.register(PriceAlert)
+class PriceAlertAdmin(admin.ModelAdmin):
+    list_display = ('user', 'stock', 'alert_type', 'price_threshold', 'is_active', 'last_triggered')
+    list_filter = ('alert_type', 'is_active', 'stock')
+    search_fields = ('user__username', 'stock__symbol')

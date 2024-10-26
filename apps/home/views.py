@@ -176,3 +176,23 @@ def dashboard(request):
     }
     
     return render(request, 'home/dashboard.html', context)
+
+def introduction(request):
+    context = {
+        'algorithms': [
+            {
+                'name': 'Technical Analysis',
+                'description': '...',
+                'use_cases': '...'
+            },
+            # Thêm các thuật toán khác
+        ],
+        'user_guides': [
+            {
+                'title': 'Bắt đầu',
+                'content': '...'
+            },
+            # Thêm các hướng dẫn khác
+        ]
+    }
+    return render(request, 'home/introduction.html', context)

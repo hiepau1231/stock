@@ -1,0 +1,71 @@
+{% extends "layouts/base.html" %}
+{% load humanize %}
+
+{% block title %} Gợi ý cân bằng danh mục {% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h4>Gợi ý cân bằng danh mục {{ portfolio.name }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if optimization_data %}
+                        <div class="recommendations mb-4">
+                            <h5>Các điều chỉnh được đề xuất</h5>
+                            <div class="table-responsive">
+                                <table class="table align-items-center">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã CP</th>
+                                            <th>Tỷ trọng hiện tại</th>
+                                            <th>Tỷ trọng đề xuất</th>
+                                            <th>Điều chỉnh</th>
+                                            <th>Lý do</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rec in optimization_data.recommendations %}
+                                        <tr>
+                                            <td>{{ rec.symbol }}</td>
+                                            <td>{{ rec.current_weight|floatformat:2 }}%</td>
+                                            <td>{{ rec.optimal_weight|floatformat:2 }}%</td>
+                                            <td class="{% if rec.action == 'tăng' %}text-success{% else %}text-danger{% endif %}">
+                                                {{ rec.action }} {{ rec.adjustment|floatformat:2 }}%
+                                            </td>
+                                            <td>{{ rec.reason }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="portfolio-metrics">
+                            <h5>Chỉ số danh mục</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Sharpe Ratio:</strong> 
+                                        {{ optimization_data.metrics.sharpe_ratio|floatformat:2 }}</p>
+                                    <p><strong>Volatility:</strong> 
+                                        {{ optimization_data.metrics.volatility|floatformat:2 }}%</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Expected Return:</strong> 
+                                        {{ optimization_data.metrics.expected_return|floatformat:2 }}%</p>
+                                    <p><strong>Risk Level:</strong> 
+                                        {{ optimization_data.metrics.risk_level }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>Không đủ dữ liệu để tạo gợi ý cân bằng danh m���c.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

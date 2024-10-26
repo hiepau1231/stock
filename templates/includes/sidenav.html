@@ -1,0 +1,7 @@
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="nav-link">
+        <i class="ni ni-user-run"></i>
+        <span>Logout</span>
+    </button>
+</form>

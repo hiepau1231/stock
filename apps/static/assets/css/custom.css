@@ -1,0 +1,21 @@
+.table td, .table th {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,.075);
+}
+
+.dropdown-menu {
+    min-width: 10rem;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-item i {
+    margin-right: 0.5rem;
+}

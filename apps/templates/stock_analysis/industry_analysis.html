@@ -1,0 +1,103 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Phân tích ngành {% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h4>Phân tích ngành</h4>
+                    <div class="industry-selector mb-3">
+                        <select class="form-control" id="industry-select">
+                            <option value="">Chọn ngành</option>
+                            {% for industry in industries %}
+                            <option value="{{ industry.id }}">{{ industry.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="industry-overview">
+                        <!-- Thông tin tổng quan về ngành -->
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Danh sách cổ phiếu theo sàn</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="stock-list">
+                                        <!-- Danh sách cổ phiếu sẽ được load bằng AJAX -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Phân tích dòng tiền</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="money-flow-chart">
+                                        <!-- Biểu đồ dòng tiền -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Top 3 cổ phiếu tiềm năng</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="potential-stocks">
+                                        <!-- Danh sách cổ phiếu tiềm năng -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ block.super }}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#industry-select').change(function() {
+        const industryId = $(this).val();
+        if (industryId) {
+            loadIndustryData(industryId);
+        }
+    });
+});
+
+function loadIndustryData(industryId) {
+    $.ajax({
+        url: `/stock/api/industry/${industryId}/`,
+        method: 'GET',
+        success: function(data) {
+            updateIndustryOverview(data.overview);
+            updateStockList(data.stocks);
+            updateMoneyFlowChart(data.money_flow);
+            updatePotentialStocks(data.potential_stocks);
+        },
+        error: function(err) {
+            console.error('Error loading industry data:', err);
+        }
+    });
+}
+</script>
+{% endblock %}

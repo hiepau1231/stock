@@ -53,7 +53,7 @@ The Stock Analysis Platform is a web-based application designed to provide users
 ## Project Structure
 ✅ Hoàn thành: Cấu trúc dự án đã được thiết lập theo đề xuất.
 
-### Directory Breakdown
+### Directory Structure
 - `manage.py`: Django's command-line utility for administrative tasks.
 - `stock_analysis_project/`: Core Django project settings and configurations.
   - `settings.py`: Configuration settings for the Django project.
@@ -164,7 +164,7 @@ The Stock Analysis Platform is a web-based application designed to provide users
 - Implement branching strategies (e.g., Git Flow) to manage feature development, bug fixes, and releases efficiently.
 
 ### 5. Comprehensive Documentation
-✅ Hoàn thành một phần: README.md đã được tạo với hướng dẫn cài đặt và chạy dự án.
+✅ Hoàn thành một phần: README.md ��ã được tạo với hướng dẫn cài đặt và chạy dự án.
 
 ### 6. Testing
 - **Automated Testing**: Implement unit tests and integration tests to ensure code quality and reliability.
@@ -220,65 +220,56 @@ https://docs.djangoproject.com/en/5.1/topics/migrations/
 
 Here's the project structure:
 
-stock_analysis_project/
-├── manage.py
-├── core/
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
+stock/
 ├── apps/
-│   ├── stock_analysis/
-│   │   ├── __init__.py
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── urls.py
-│   │   ├── services/
-│   │   │   └── stock_service.py
-│   │   ├── templatetags/
-│   │   ├── management/
-│   │   │   ├── __init__.py
-│   │   │   └── commands/
-│   │   │       ├── __init__.py
-│   │   │       ├── create_sample_data.py
-│   │   │       └── scrape_stock_data.py
-│   │   ├── utils/
-│   │   │   └── performance.py
-│   │   ├── middleware/
-│   │   └── tests.py
-│   ├── authentication/
-│   ├── predictions/
-│   │   └── models.py
-│   └── home/
-│       └── views.py
-├── templates/
-│   ├── base.html
-│   ├── home/
-│   │   └── dashboard.html
-│   └── stock_analysis/
-│       ├── dashboard.html
-│       ├── stock_list.html
-│       ├── stock_detail.html
-│       ├── portfolio_list.html
-│       ├── portfolio_detail.html
-│       ├── portfolio_create.html
-│       ├── stock_comparison.html
-│       ├── error.html
-│       └── partials/
-│           └── market_overview.html
-├── static/
-│   └── assets/
-│       └── vendor/
-│           └── moment/
-│               └── locale/
-│                   └── vi.js
-├── cline_docs/
-│   ├── currentTask.md
-│   ├── instruction.md
-│   └── currenterror.md
-├── requirements.txt
+│ ├── authentication/ # User authentication
+│ │ ├── forms.py
+│ │ ├── urls.py
+│ │ └── views.py
+│ ├── home/ # Home page app
+│ │ ├── urls.py
+│ │ └── views.py
+│ ├── predictions/ # Stock predictions
+│ │ └── models.py
+│ ├── stock_analysis/ # Main stock analysis app
+│ │ ├── admin.py
+│ │ ├── models.py
+│ │ ├── urls.py
+│ │ ├── views.py
+│ │ ├── services/
+│ │ │ └── stock_service.py
+│ │ ├── management/
+│ │ │ └── commands/
+│ │ │ └── scrape_stock_data.py
+│ │ ├── middleware/
+│ │ │ └── request_logging.py
+│ │ └���─ utils/
+│ │ └── performance.py
+│ ├── static/ # Static files
+│ │ └── assets/
+│ │ ├── css/
+│ │ ├── img/
+│ │ ├── js/
+│ │ └── vendor/
+│ └── templates/ # HTML templates
+│ ├── accounts/
+│ ├── home/
+│ ├── includes/
+│ └── stock_analysis/
+├── core/ # Project settings
+│ ├── settings.py
+│ ├── urls.py
+│ └── wsgi.py
+├── cline_docs/ # Project documentation
+│ ├── currentTask.md
+│ ├── instruction.md
+│ └── projectRoadmap.md
+├── staticfiles/ # Collected static files
+├── .env # Environment variables
+├── .gitignore
+├── manage.py
 ├── README.md
-└── test_vnstock.py
+└── requirements.txt
 
 
 ✅ Hoàn thành: Cấu trúc dự án đã được thiết lập theo đề xuất.
@@ -300,3 +291,4 @@ stock_analysis_project/
 - `requirements.txt`: Python package dependencies
 
 [Rest of the document remains unchanged...]
+
